@@ -84,7 +84,8 @@ object Carroll:
       val premisses = """(?s)\(\d+\)\s+(.*?)(?=\n\s*\(\d+\)|\z)""".r.findAllMatchIn(stated)
         .map(m => plain(m.group(1)).stripSuffix(";").stripSuffix(".").trim).toVector
       val universe = "\"([^\"]*)\"".r.findFirstMatchIn(glossary).map(_.group(1)).getOrElse("things")
-      val dictionary = """(?s)\b([a-z]) = (.*?)(?=;\s*[a-z] = |\z)""".r.findAllMatchIn(plain(glossary))
+      // a term ends at the next `x = ` (the text misses a `;` once, in exercise 47)
+      val dictionary = """(?s)\b([a-z]) = (.*?)(?=;?\s+[a-z] = |\z)""".r.findAllMatchIn(plain(glossary))
         .map(m => m.group(1) -> m.group(2).trim.stripSuffix(".").trim).toVector
       val solved = solutions.getOrElse(n, Vector.empty).mkString("\n")
       val gold = Formula.findAllIn(solved).take(premisses.size).toVector

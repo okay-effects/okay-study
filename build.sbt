@@ -24,3 +24,14 @@ lazy val study = (project in file("study")).dependsOn(core).settings(name := "ok
   Test / fork := true, Test / baseDirectory := (ThisBuild / baseDirectory).value)
 
 lazy val root = (project in file(".")).aggregate(core, study).settings(publish / skip := true)
+
+/** the small reader: a language model on Apple's GPU (mlx-scala) weighs a premiss's readings said in words */
+val mlxNativeLib =
+  sys.env.get("MLX_SCALA_LIB").map(file).getOrElse(file("../mlx-scala/native-lib/out/lib")).getCanonicalFile
+lazy val reader = (project in file("reader")).dependsOn(core).settings(name := "okay-study-reader",
+  publish / skip := true, resolvers += "mlx-scala" at "https://sergey-scherbina.github.io/mlx-scala/maven",
+  libraryDependencies ++= Seq("io.github.sergey-scherbina" %% "mlx-scala" % "0.1.0",
+    "io.github.sergey-scherbina" %% "mlx-scala-llm" % "0.1.0", munit),
+  fork := true, run / baseDirectory := (ThisBuild / baseDirectory).value,
+  Test / baseDirectory := (ThisBuild / baseDirectory).value,
+  javaOptions ++= Seq("--enable-native-access=ALL-UNNAMED", s"-Dokm.lib=$mlxNativeLib/libokm.dylib", "-Xss16m"))
