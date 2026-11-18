@@ -1,71 +1,108 @@
 package okay.study
 
-import okay.effects.json.Json
+import okay.datalog.Parse
+import okay.effects.json.{Json, JsonText}
 import okay.llm.{Ask, Llm, Sampling}
 import okay.scala3.*
 
 /** THE STUDY: a teacher (the effect `Llm`) reads a lesson of a book and writes the symbolic model of its
- * problems; the book's worked exercises judge it; what failed is told back, and it writes again. The teacher is
- * never trusted: a model serves by the exercises it answers as the book does, and only so */
+ * problems, in two stages each with its own judge — the WORDS (how a problem and an answer are written: judged
+ * by reading every sentence and saying every printed answer back), then the RULES over those words (judged by the
+ * book's answers). The teacher is never trusted: a writing serves by what it passes, and only so */
 object Study:
-  /** one writing: what the teacher said, the model read from it (or why not), its score on the exercises shown */
-  final case class Round(reply: String, model: Either[String, Model], score: Option[Score])
+  /** one writing: what the teacher said, and how many of its checks it passed (none: it could not be read) */
+  final case class Round(stage: String, reply: String, passed: Option[Int], of: Int, told: String)
 
-  final case class Result(rounds: Vector[Round]):
-    /** the best model written: by the exercises right, the earliest of equals */
-    def best: Option[(Model, Score)] =
-      rounds.collect { case Round(_, Right(m), Some(s)) => (m, s) }.maxByOption(_._2.right)
+  final case class Result(model: Option[Model], score: Option[Score], rounds: Vector[Round])
 
-  val format: String =
-    """You write a MODEL: a JSON object that lets an exact Datalog engine solve a book's problems. A problem is a
-      |list of sentences; the model reads each sentence into facts, the rules derive the answers, and the answers
-      |are said in the book's notation.
+  private val patterns: String =
+    """PATTERNS. A pattern is literal text with slots. `{X}` is a slot (a name beginning with a capital letter)
+      |matching any text; `{X:regex}` gives the slot its own regular expression (no `}` inside). The regex
+      |`[a-z]'?` matches one letter with an OPTIONAL prime: `a`, `c'`. (Without the `?` the prime is required
+      |and `a` is not matched.) A pattern must match the WHOLE text; of several forms the first that matches is
+      |used. Text like `_{1}` in a pattern is literal: only `{Capital...}` is a slot.""".stripMargin
+
+  private val wordsFormat: String =
+    s"""You write the WORDS of a model: how the problems of a book and their answers are written. The rules that
+       |solve them come later; now only the notation. Answer with one JSON object in a ```json block:
+       |
+       |{
+       |  "sentences": [{"pattern": "...", "facts": ["pred(arg, ...)", ...]}, ...],
+       |  "terms":     [{"pattern": "...", "facts": ["pred(arg, ...)", ...]}, ...],
+       |  "answers":   [{"pattern": "...", "goal": "pred(X, Y)", "unordered": false}, ...]
+       |}
+       |
+       |$patterns
+       |SENTENCES. Each form reads one kind of sentence of a problem into facts for a Datalog engine. A fact
+       |template is `pred(arg, ...)` with a lowercase predicate name; an argument is text where `{X}` is replaced
+       |by the slot's value. `{#}` is the number of the sentence in its problem (1, 2, ...): put it as the first
+       |argument, so that the rules can tell the sentences apart. Example:
+       |  {"pattern": "No {X:[a-z]'?} are {Y:[a-z]'?}", "facts": ["no({#}, {X}, {Y})"]}
+       |TERMS. Every slot value of a matched sentence is also read by the first "terms" form that matches it,
+       |and that form's facts are added. The engine cannot build new constants, so this is the only way to relate
+       |a term to another the sentence does not contain — e.g. a letter to its primed form and back:
+       |  {"pattern": "{T:[a-z]}'", "facts": ["neg({T}', {T})", "neg({T}, {T}')", "letter({T}', {T})", "letter({T}, {T})"]},
+       |  {"pattern": "{T:[a-z]}",  "facts": ["neg({T}', {T})", "neg({T}, {T}')", "letter({T}', {T})", "letter({T}, {T})"]}
+       |ANSWERS. One form per KIND of answer the book prints (not per problem). Its pattern is the book's own
+       |notation with slots; its goal is `pred(X, Y)` — a predicate name you choose for that kind of answer, with
+       |exactly the pattern's slots as its arguments. The rules written later will derive this predicate. An
+       |answer the book prints as `p + q` is two answers, each read by a form alone: never put ` + ` in a pattern.
+       |`"unordered": true` when the order of the two arguments says nothing.""".stripMargin
+
+  private val rulesFormat: String =
+    """You write the RULES of a model: a Datalog theory that derives a problem's answers from its facts. Answer
+      |with one JSON object in a ```json block:  {"rules": ["head(X, Y) :- p(X, Z), q(Z, Y).", ...]}
       |
-      |{
-      |  "sentences": [{"pattern": "...", "facts": ["pred(arg, ...)", ...]}, ...],
-      |  "terms":     [{"pattern": "...", "facts": ["pred(arg, ...)", ...]}, ...],
-      |  "rules":     ["head(X, Y) :- body(X, Z), other(Z, Y).", ...],
-      |  "answers":   [{"pattern": "...", "goal": "pred(X, Y)", "unordered": false}, ...]
-      |}
-      |
-      |PATTERNS. A pattern is literal text with slots. `{X}` is a slot (a name beginning with a capital letter)
-      |matching any text; `{X:regex}` gives the slot its own regular expression (no `}` inside), e.g.
-      |`{X:[a-z]'?}` for a letter with an optional prime. A pattern must match the WHOLE sentence. The first
-      |sentence form that matches is used; a sentence that no form matches is an error.
-      |FACTS. Each fact template is `pred(arg, ...)`; an argument is text in which `{X}` is replaced by the slot's
-      |value, so `{X}'` builds the value with a prime added. `{#}` is the number of the sentence in its problem
-      |(1, 2, ...) — use it when the rules must tell the sentences apart or count where a thing occurs.
-      |TERMS. Every slot value of a matched sentence is also read by the first "terms" form that matches it, and
-      |that form's facts are added. This is the only way to create constants the sentences do not contain (the
-      |engine cannot build new constants): e.g. to relate a letter to its primed form both ways.
-      |RULES. Datalog: `head :- literal, literal.` Variables begin with a capital letter. A literal is `p(X, Y)`,
-      |a negation `not p(X, Y)`, or a comparison `X != Y`, `X = Y`, `X < Y`. Negation must be stratified (no
-      |recursion through `not`), and every variable of a head, a negation or a comparison must occur in a positive
-      |literal of the same rule. No arithmetic, no aggregates, no function symbols. Do not write constants in
-      |rules unless they are plain lowercase words. Comment lines begin with `%`.
-      |ANSWERS. Each answer form has a goal `pred(X, Y)` whose variables are exactly the slots of its pattern;
-      |every solution of the goal is said by the pattern. The answers of a problem are ALL solutions of ALL goals,
-      |and they must be exactly the book's answer — nothing missing, nothing more. The book's own answers are
-      |read by the same patterns (`a + b` in the book means two answers). `"unordered": true` says the order of
-      |the goal's arguments does not matter when answers are compared. The first answer form that matches is used.
-      |
-      |A small model of another kind of problem, to show the format only:
-      |{
-      |  "sentences": [{"pattern": "{X:[A-Z][a-z]+} is a parent of {Y:[A-Z][a-z]+}", "facts": ["parent({X}, {Y})"]}],
-      |  "terms": [],
-      |  "rules": ["anc(X, Y) :- parent(X, Y).", "anc(X, Z) :- parent(X, Y), anc(Y, Z).",
-      |            "grand(X, Z) :- parent(X, Y), parent(Y, Z)."],
-      |  "answers": [{"pattern": "{X:[A-Z][a-z]+} is a grandparent of {Y:[A-Z][a-z]+}", "goal": "grand(X, Y)",
-      |               "unordered": false}]
-      |}
-      |
-      |Answer with the model alone, as one JSON object in a ```json block.""".stripMargin
+      |THE DIALECT, strictly:
+      |- A rule is `head :- literal, literal, ... .` and ends with a period. A fact or head is `pred(A, B)`.
+      |- An argument is a Variable (begins with a capital letter) or a plain lowercase constant. NOTHING else:
+      |  no nested terms like `f(g(X))`, no `+`, no lists, no strings built in rules, no arithmetic.
+      |- A literal is `p(X, Y)`, a negation `not p(X, Y)`, or a comparison `X != Y`, `X = Y`, `X < Y`.
+      |- Every variable of a head, of a negation and of a comparison must also occur in a positive literal of the
+      |  same rule. Negation must be stratified: no recursion through `not`.
+      |- Recursion is allowed and is how a chain of any length is followed:
+      |    reach(X, Y) :- step(X, Y).
+      |    reach(X, Z) :- step(X, Y), reach(Y, Z).
+      |- "Exactly once" is said with a negation of "twice":
+      |    twice(B) :- occurs(P, B), occurs(Q, B), P != Q.
+      |    once(B) :- occurs(P, B), not twice(B).
+      |- Comment lines begin with `%`.
+      |The rules must be GENERAL: they see only the facts of one problem, of any number of sentences. Never write
+      |a problem's letters or its answer into a rule. The answers of a problem are ALL solutions of the answer
+      |goals — they must be exactly the book's answer, nothing missing and nothing more.""".stripMargin
 
   private def shown(e: Exercise): String =
     s"Problem ${e.number}:\n${e.sentences.map("  " + _).mkString("\n")}\nThe book's answer: ${e.answer}"
 
-  def task(lesson: String, examples: Vector[Exercise]): String =
-    s"""$format
+  private def parts(answer: String): Vector[String] =
+    answer.split("\\s+\\+\\s+").toVector.map(_.trim).filter(_.nonEmpty)
+
+  /** THE WORDS' JUDGE: every sentence read, every printed answer read and said back the same, every goal a
+   * predicate of its pattern's slots. The failures, in words for the teacher */
+  def wordsFaults(m: Model, examples: Vector[Exercise]): Vector[String] =
+    val sentences = examples.flatMap(_.sentences).distinct
+      .filter(s => !m.sentences.exists(_.pattern.read(s).isDefined)).map(s => s"no sentence form reads: $s")
+    val answers = examples.flatMap(e => parts(e.answer)).distinct.flatMap { a =>
+      m.answers.iterator.flatMap(s => s.pattern.read(a).map(s -> _)).nextOption() match
+        case None => Some(s"no answer form reads: $a")
+        case Some((s, values)) =>
+          val back = s.pattern.say(values)
+          if back.replaceAll("\\s+", "") == a.replaceAll("\\s+", "") then None
+          else Some(s"the answer $a is said back as $back by the pattern ${s.pattern.text}")
+    }
+    val goals = m.answers.flatMap(s => Parse.atom(s.goal) match
+      case Left(e) => Some(s"the goal `${s.goal}` is not `pred(X, Y)`: $e")
+      case Right(atom) =>
+        val vars = atom.args.collect { case okay.datalog.Term.Var(n) => n }
+        if vars.size == atom.args.size && vars.toSet == s.pattern.slots.toSet then None
+        else Some(s"the goal `${s.goal}` must have exactly the slots of `${s.pattern.text}` as its arguments"))
+    val preds = m.sentences.flatMap(_.facts.map(_.pred)).toSet
+    val clash = m.answers.flatMap(s => Parse.atom(s.goal).toOption.map(_.pred)).filter(preds)
+      .map(p => s"the answer predicate `$p` is also a sentence's fact: an answer must be derived, choose another name")
+    (sentences ++ answers ++ goals ++ clash).distinct
+
+  def wordsTask(lesson: String, examples: Vector[Exercise]): String =
+    s"""$wordsFormat
        |
        |THE LESSON, from the book:
        |
@@ -75,50 +112,105 @@ object Study:
        |
        |${examples.map(shown).mkString("\n\n")}
        |
-       |Write the model that answers every one of these problems as the book does, by the lesson's own method —
-       |a general theory, not a table of these problems.""".stripMargin
+       |Write the words for these problems and their answers.""".stripMargin
 
-  /** what the exercises said about a model, told to the teacher */
+  private def factsShown(m: Model, e: Exercise): String =
+    Solve.facts(m, e.sentences).fold(identity, _.map(f => s"${f.pred}(${f.args.mkString(", ")})").mkString("  ", "\n  ", ""))
+
+  def rulesTask(lesson: String, words: Model, examples: Vector[Exercise]): String =
+    s"""$rulesFormat
+       |
+       |THE LESSON, from the book:
+       |
+       |$lesson
+       |
+       |THE WORDS, already fixed (you cannot change them): how sentences become facts and which predicates say
+       |the answers.
+       |
+       |${words.copy(rules = "").json}
+       |
+       |For example, the facts of Problem ${examples.head.number} are:
+       |${factsShown(words, examples.head)}
+       |
+       |THE PROBLEMS, with the book's answers:
+       |
+       |${examples.map(shown).mkString("\n\n")}
+       |
+       |Write the rules that derive, from a problem's facts, the answer predicates
+       |${words.answers.map(a => s"`${a.goal}` (said as ${a.pattern.text})").mkString(", ")}
+       |so that every problem is answered as the book does — by the lesson's own method.""".stripMargin
+
+  /** what the exercises said about the rules, told to the teacher: an error every problem shares is said once */
   def report(score: Score): String =
-    val lines = score.verdicts.map {
-      case (e, Verdict.Right_(_)) => s"Problem ${e.number}: right."
-      case (e, Verdict.Wrong(said, expected)) =>
-        s"Problem ${e.number}: WRONG. Your model answers: ${if said.isEmpty then "(nothing)" else said.mkString(" + ")}. " +
-          s"The book's answer: $expected."
-      case (e, Verdict.Failed(why)) => s"Problem ${e.number}: FAILED. $why"
-    }
-    s"""Your model answers ${score.said} problems as the book does.
-       |
-       |${lines.mkString("\n")}
-       |
-       |Find what is wrong in the theory and write the whole corrected model, as one JSON object in a ```json
-       |block.""".stripMargin
+    val failures = score.verdicts.collect { case (_, Verdict.Failed(why)) => why }
+    if failures.size == score.total && failures.distinct.size == 1 then
+      s"The model could not run on any problem: ${failures.head}\nWrite the whole corrected rules."
+    else
+      val lines = score.verdicts.map {
+        case (e, Verdict.Right_(_)) => s"Problem ${e.number}: right."
+        case (e, Verdict.Wrong(said, expected)) =>
+          s"Problem ${e.number}: WRONG. Your rules answer: " +
+            s"${if said.isEmpty then "(nothing)" else said.mkString(" + ")}. The book's answer: $expected."
+        case (e, Verdict.Failed(why)) => s"Problem ${e.number}: FAILED. $why"
+      }
+      s"Your rules answer ${score.said} problems as the book does.\n\n${lines.mkString("\n")}\n\n" +
+        "Find what is wrong in the theory and write the whole corrected rules."
 
   /** the JSON object in a reply: the last fenced block, else from the first `{` to the last `}` */
-  def model(reply: String): Either[String, Model] =
+  def json(reply: String): Either[String, Json] =
     val fenced = "(?s)```(?:json)?\\s*(\\{.*?\\})\\s*```".r.findAllMatchIn(reply).map(_.group(1)).toVector.lastOption
     val braces = for a <- Some(reply.indexOf('{')) if a >= 0; b = reply.lastIndexOf('}') if b > a
       yield reply.substring(a, b + 1)
-    fenced.orElse(braces).toRight("no JSON object in the answer").flatMap(Model.parse)
+    fenced.orElse(braces).toRight("no JSON object in the answer")
+      .flatMap(t => JsonText.parse(t).left.map(e => s"not JSON: $e"))
 
-  private def message(role: String, text: String): Json = Json.obj("role" -> Json.Str(role), "content" -> Json.Str(text))
+  private def message(role: String, text: String): Json =
+    Json.obj("role" -> Json.Str(role), "content" -> Json.Str(text))
 
-  /** the model written for a lesson, over at most `rounds` writings; it ends early when every example is right */
-  def write[R[_]: Has[Llm]](lesson: String, examples: Vector[Exercise], rounds: Int, maxTokens: Int = 6000,
+  /** A STAGE: the task asked, each writing judged — (what it made, how many checks passed, what to tell back; no
+   * faults: done) — at most `rounds` times; the best writing by checks passed. An empty reply (the thinking took
+   * the budget) is asked again without thinking and is not put into the conversation */
+  private def stage[A, R[_]: Has[Llm]](name: String, task: String, rounds: Int, maxTokens: Int, of: Int,
+      thinking: Boolean)(judge: Json => Either[String, (A, Int, Option[String])]): (Option[(A, Int)], Vector[Round]) ! R =
+    final case class At(messages: Vector[Json], thinking: Boolean, best: Option[(A, Int)], done: Vector[Round])
+    loop[At, (Option[(A, Int)], Vector[Round]), R](At(Vector(message("user", task)), thinking, None, Vector.empty)) { at =>
+      Llm.complete(Ask(at.messages, maxTokens = maxTokens, thinking = at.thinking,
+        sampling = Sampling(temperature = Some(0.0)))).map { finished =>
+        val reply = finished.reply.content
+        val judged = json(reply).flatMap(judge)
+        val (best, passed, told) = judged match
+          case Right((a, n, tell)) => (if at.best.forall(_._2 < n) then Some(a -> n) else at.best, Some(n), tell)
+          case Left(why) => (at.best, None, Some(s"Your answer could not be read: $why"))
+        val all = at.done :+ Round(name, reply, passed, of, told.getOrElse("all passed"))
+        if told.isEmpty || all.size >= rounds then Right(best -> all)
+        else if reply.trim.isEmpty then Left(At(at.messages, false, best, all))
+        else Left(At(at.messages :+ message("assistant", reply) :+ message("user",
+          s"${told.get}\n\nAnswer with the whole corrected JSON object in a ```json block."), at.thinking, best, all))
+      }
+    }
+
+  /** the model written for a lesson: the words, then the rules over them; the score is on the examples shown */
+  def write[R[_]: Has[Llm]](lesson: String, examples: Vector[Exercise], rounds: Int, maxTokens: Int = 16000,
       thinking: Boolean = true): Result ! R =
-    loop[(Vector[Json], Vector[Round]), Result, R]((Vector(message("user", task(lesson, examples))), Vector.empty)) {
-      (messages, done) =>
-        Llm.complete(Ask(messages, maxTokens = maxTokens, thinking = thinking,
-          sampling = Sampling(temperature = Some(0.0)))).map { finished =>
-          val reply = finished.reply.content
-          val written = model(reply)
-          val score = written.toOption.map(Score.of(_, examples))
-          val all = done :+ Round(reply, written, score)
-          if score.exists(s => s.right == s.total) || all.size >= rounds then Right(Result(all))
-          else
-            val told = score.map(report).getOrElse(
-              s"The model could not be read: ${written.left.getOrElse("")}. Write the whole model again, as one JSON " +
-                "object in a ```json block.")
-            Left((messages :+ message("assistant", reply) :+ message("user", told), all))
-        }
+    val checks = examples.flatMap(_.sentences).distinct.size + examples.flatMap(e => parts(e.answer)).distinct.size
+    stage[Model, R]("words", wordsTask(lesson, examples), rounds, maxTokens, checks, thinking) { j =>
+      Model.parse(j.render).map { m =>
+        val faults = wordsFaults(m, examples)
+        (m, checks - faults.size, Option.when(faults.nonEmpty)(faults.mkString("\n")))
+      }
+    }.flatMap {
+      case (Some((words, passed)), wordRounds) if passed == checks =>
+        stage[(Model, Score), R]("rules", rulesTask(lesson, words, examples), rounds, maxTokens, examples.size,
+            thinking) { j =>
+          val text = j.field("rules") match
+            case Some(Json.Arr(lines)) => Right(lines.collect { case Json.Str(s) => s }.mkString("\n"))
+            case Some(Json.Str(s)) => Right(s)
+            case _ => Left("no \"rules\" in the object")
+          text.map { rules =>
+            val model = words.copy(rules = rules)
+            val score = Score.of(model, examples)
+            ((model, score), score.right, Option.when(score.right < score.total)(report(score)))
+          }
+        }.map((best, ruleRounds) => Result(best.map(_._1._1), best.map(_._1._2), wordRounds ++ ruleRounds))
+      case (_, wordRounds) => pure(Result(None, None, wordRounds))
     }
