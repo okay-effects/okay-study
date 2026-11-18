@@ -100,3 +100,19 @@ The reason, as far as one run tells: three different things are asked in one ans
 theory (rules) and a dialect (this Datalog) — and the only signal back is the last one's failure. Next (§5.1):
 the stages apart, each with its own check — the words first (every sentence read, every printed answer read and
 said back the same), then the rules over fixed words with the facts of a problem shown.
+
+### 4.3 The stages apart, the same teacher — the words pass, the rules do not run (2026-11-18)
+
+Same teacher and lesson, 10 shown, 16 held out, 6 rounds a stage, 8 minutes.
+- **Words: passed at the second writing** (33 checks of 33) — but mostly by copying the format's own examples (the
+  term forms word for word), and with ONE goal for both kinds of answer (`a_{1}b_{0}` and `ab_{0}` → the same
+  `conclusion(X, Y)`): the words' judge let through a notation in which "all" and "no" answers are one claim.
+  Fixed after this run: two answer forms may not share a goal.
+- **Rules: 0 of 10 shown, 0 of 16 held out.** Five writings, none RAN: one syntax error, then four times the same
+  kind of unsafe rule (`partial(X, Y) :- partial(U, V), no(N, V, U), comp(V, V).` — the head's variables in no
+  positive literal), each "corrected" into another unsafe rule. The theory was never reached: the report never got
+  past the dialect. One reply of six was empty again.
+What one run tells: this teacher (35B-A3B, 4-bit, ~3B active) does not write a recursive, stratified Datalog
+theory of this size, with the dialect explained and the engine's own error told back. The format is not the
+obstacle (§4.1: twenty rules do it). Next: the same protocol with a stronger teacher, to tell the method's limit
+from this model's.
