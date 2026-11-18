@@ -77,7 +77,7 @@ answers and, apart, solutions. It separates the two halves by itself:
 - A model's notation of answers must be the book's; where a book prints one answer in several ways the measure
   is a lower bound.
 
-## 7. Knowledge looked up (planned, SPRINT 5)
+## 7. Knowledge looked up (planned, SPRINT 6)
 
 The symbolic side knows what it lacks: a goal not reached names the missing fact, and that hole — said in words —
 is the query. The reader's part is the one it already has: among a page's sentences, choose the one that states
@@ -116,3 +116,31 @@ What one run tells: this teacher (35B-A3B, 4-bit, ~3B active) does not write a r
 theory of this size, with the dialect explained and the engine's own error told back. The format is not the
 obstacle (§4.1: twenty rules do it). Next: the same protocol with a stronger teacher, to tell the method's limit
 from this model's.
+
+### 4.4 A stronger teacher, the same protocol — POSITIVE: 16 of 16 held out, at the first writing (2026-11-18)
+
+The same two tasks (`Judge`, by files), with the format's examples made of ANOTHER kind of problem — no hint of
+this book's notation or theory, the "exactly once" idiom removed (commit before this one). The teacher: a fresh
+agent of the model this repository is developed with (Claude), told to read the task's one file and nothing else.
+- **Words: passed at the first writing.** `no`, `all`, `some` forms; the letter and its prime related both ways
+  by the term forms; two answer forms, two goals, the nullity unordered.
+- **Rules: 12 rules, first writing — shown 10 of 10, HELD OUT 16 of 16.** Kept as `models/carroll-sorites.json`,
+  under a test (`CarrollSuite`: 26 of 26). Shorter than the hand-written reference (20 rules): a premiss as a
+  nullity both ways, a retinend as an attribute whose negation never occurs, the chain through negations.
+
+So the method holds — a lesson's prose and ten answered exercises are enough to write a theory that answers the
+book's other exercises, in two stages each with its judge — and §4.2–4.3 measured the LOCAL teacher's limit, not
+the method's. To hold against it:
+- one run, one book, one kind of problem, and the smallest theory one could ask for;
+- Carroll's method is in any large model's training: this is not yet "a theory learned from an unseen book" —
+  that needs a text the teacher cannot have seen (a made-up calculus with its own exercises);
+- the agent had tools; it reported, and its usage shows, two calls — the two files it was given; this is not
+  enforced by the protocol.
+
+## 5.1 What follows
+
+1. **Which teacher is enough**: the same two tasks to models between the 35B-A3B and this one — the smallest
+   that writes the rules decides whether build time can stay on the Mac.
+2. **An unseen book**: a small invented calculus, its lesson and exercises written by us, to take the training's
+   memory out of the measure.
+3. Then SPRINT 2 (the reader's ceiling on § 9).

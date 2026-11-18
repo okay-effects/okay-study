@@ -40,7 +40,8 @@ object Judge:
             val model = words(w).copy(rules = text)
             val shown = Score.of(model, train)
             write(out, model.json)
-            println(if shown.right == shown.total then s"PASSED: shown ${shown.said}" else s"TOLD:\n${Study.report(shown)}")
+            println(if shown.right == shown.total then s"PASSED: shown ${shown.said}"
+              else s"TOLD:\n${Study.report(shown)}")
             val heldOut = Score.of(model, held)
             println(s"NOT TOLD — held out ${heldOut.said}")
             heldOut.verdicts.foreach {

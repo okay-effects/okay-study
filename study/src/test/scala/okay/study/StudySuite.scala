@@ -17,7 +17,8 @@ class StudySuite extends munit.FunSuite:
   private def rules(text: String) = Json.obj("rules" -> Json.Str(text)).render
   private val right = rules(reference.rules)
   /** existence forgotten: every answer of `All` is lost */
-  private val wrong = rules(reference.rules.replace("exists(X) :- every(P, X, Y).", "exists(X) :- every(P, X, Y), nullity(P, X, Y)."))
+  private val wrong = rules(reference.rules.replace("exists(X) :- every(P, X, Y).",
+    "exists(X) :- every(P, X, Y), nullity(P, X, Y)."))
 
   /** an answer per distinct message, in the order first seen */
   private def study(answers: Vector[String], rounds: Int): Study.Result =

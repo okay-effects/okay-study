@@ -7,7 +7,8 @@ import java.nio.file.{Files, Path}
 
 /** Carroll's soriteses studied by a teacher behind a server (okay-mlx's gateway): the first `TRAIN` consistent
  * exercises of § 8 are shown with their answers, the rest are held out and only measured.
- *   TEACHER_URL (http://127.0.0.1:8090/v1), TEACHER_MODEL, TRAIN (10), ROUNDS (6 a stage), OUT (runs/carroll-sorites) */
+ *   TEACHER_URL (http://127.0.0.1:8090/v1), TEACHER_MODEL, TRAIN (10), ROUNDS (6 a stage),
+ *   OUT (runs/carroll-sorites) */
 object Main:
   private def env(name: String, default: String): String = sys.env.getOrElse(name, default)
 
@@ -25,7 +26,8 @@ object Main:
       Files.writeString(out.resolve(s"round-${i + 1}-${round.stage}.reply.txt"), round.reply)
       Files.writeString(out.resolve(s"round-${i + 1}-${round.stage}.told.txt"), round.told)
       println(s"round ${i + 1}, ${round.stage}: " +
-        round.passed.fold("unreadable")(n => s"$n of ${round.of}") + (if round.reply.isEmpty then " (empty reply)" else ""))
+        round.passed.fold("unreadable")(n => s"$n of ${round.of}") +
+        (if round.reply.isEmpty then " (empty reply)" else ""))
     }
     (result.model, result.score) match
       case (Some(model), Some(shown)) =>

@@ -9,7 +9,7 @@ judged by the book's own exercises and answers. Read `specs/study.md` first; the
   `Score`, `Book` (cutting a text into numbered exercises and answers), `Carroll` (the first book's layout and
   its misprints). No language model here — this is what runs on a phone.
 - `study/`: `Study.write` — a program of okay-llm's `Llm` alone: the teacher writes a model, the exercises shown
-  judge it, the report goes back; `Main` runs it against the gateway (`TEACHER_URL`, default :8090).
+  judge it, the report goes back; `Main` runs it against the gateway (`TEACHER_URL`, default :8090), `Judge` by files for any other teacher.
 - `books/`: the texts, as published (public domain or open licence only), never edited — an erratum is data in
   the code with its reason.
 - The rule: nothing a model writes is trusted; it serves by the exercises it answers as the book does. A measure

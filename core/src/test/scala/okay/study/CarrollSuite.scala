@@ -30,3 +30,8 @@ class CarrollSuite extends munit.FunSuite:
   test("a sentence no form reads is an error, never skipped"):
     val model = reference.fold(e => fail(e), identity)
     assert(Solve.run(model, Vector("No c are d", "Some a are d")).left.exists(_.contains("Some a are d")))
+
+  test("the model a teacher wrote from the book (models/carroll-sorites.json) answers all 26 consistent exercises"):
+    val model = Model.parse(text("models/carroll-sorites.json")).fold(e => fail(e), identity)
+    val score = Score.of(model, exercises.filterNot(e => Carroll.misprinted.contains(e.number)))
+    assertEquals(score.said, "26 of 26")

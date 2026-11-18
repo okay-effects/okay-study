@@ -117,7 +117,8 @@ object Study:
        |Write the words for these problems and their answers.""".stripMargin
 
   private def factsShown(m: Model, e: Exercise): String =
-    Solve.facts(m, e.sentences).fold(identity, _.map(f => s"${f.pred}(${f.args.mkString(", ")})").mkString("  ", "\n  ", ""))
+    Solve.facts(m, e.sentences)
+      .fold(identity, _.map(f => s"${f.pred}(${f.args.mkString(", ")})").mkString("  ", "\n  ", ""))
 
   def rulesTask(lesson: String, words: Model, examples: Vector[Exercise]): String =
     s"""$rulesFormat
@@ -173,9 +174,11 @@ object Study:
    * faults: done) — at most `rounds` times; the best writing by checks passed. An empty reply (the thinking took
    * the budget) is asked again without thinking and is not put into the conversation */
   private def stage[A, R[_]: Has[Llm]](name: String, task: String, rounds: Int, maxTokens: Int, of: Int,
-      thinking: Boolean)(judge: Json => Either[String, (A, Int, Option[String])]): (Option[(A, Int)], Vector[Round]) ! R =
+      thinking: Boolean)(
+      judge: Json => Either[String, (A, Int, Option[String])]): (Option[(A, Int)], Vector[Round]) ! R =
     final case class At(messages: Vector[Json], thinking: Boolean, best: Option[(A, Int)], done: Vector[Round])
-    loop[At, (Option[(A, Int)], Vector[Round]), R](At(Vector(message("user", task)), thinking, None, Vector.empty)) { at =>
+    val start = At(Vector(message("user", task)), thinking, None, Vector.empty)
+    loop[At, (Option[(A, Int)], Vector[Round]), R](start) { at =>
       Llm.complete(Ask(at.messages, maxTokens = maxTokens, thinking = at.thinking,
         sampling = Sampling(temperature = Some(0.0)))).map { finished =>
         val reply = finished.reply.content

@@ -1,0 +1,68 @@
+{
+  "sentences": [
+    {
+      "pattern": "No {X:[a-z]'?} are {Y:[a-z]'?}",
+      "facts": [
+        "no({#}, {X}, {Y})"
+      ]
+    },
+    {
+      "pattern": "All {X:[a-z]'?} are {Y:[a-z]'?}",
+      "facts": [
+        "all({#}, {X}, {Y})"
+      ]
+    },
+    {
+      "pattern": "Some {X:[a-z]'?} are {Y:[a-z]'?}",
+      "facts": [
+        "some({#}, {X}, {Y})"
+      ]
+    }
+  ],
+  "terms": [
+    {
+      "pattern": "{T:[a-z]}'",
+      "facts": [
+        "neg({T}, {T}')",
+        "neg({T}', {T})",
+        "term({T})",
+        "term({T}')"
+      ]
+    },
+    {
+      "pattern": "{T:[a-z]}",
+      "facts": [
+        "neg({T}, {T}')",
+        "neg({T}', {T})",
+        "term({T})",
+        "term({T}')"
+      ]
+    }
+  ],
+  "rules": [
+    "prem(X, Y) :- no(N, X, Y).",
+    "prem(Y, X) :- no(N, X, Y).",
+    "prem(X, Z) :- all(N, X, Y), neg(Y, Z).",
+    "prem(Z, X) :- all(N, X, Y), neg(Y, Z).",
+    "exists(X) :- all(N, X, Y).",
+    "occurs(X) :- prem(X, Y).",
+    "retinend(X) :- occurs(X), neg(X, Z), not occurs(Z).",
+    "chain(X, Y) :- prem(X, Y).",
+    "chain(X, Y) :- chain(X, M), neg(M, K), prem(K, Y), X != Y.",
+    "concl(X, Y) :- chain(X, Y), retinend(X), retinend(Y), X != Y.",
+    "existing_nullity(X, Y) :- concl(X, Y), exists(X).",
+    "nullity(X, Y) :- concl(X, Y), not exists(X), not exists(Y)."
+  ],
+  "answers": [
+    {
+      "pattern": "{X:[a-z]'?}_{1}{Y:[a-z]'?}_{0}",
+      "goal": "existing_nullity(X, Y)",
+      "unordered": false
+    },
+    {
+      "pattern": "{X:[a-z]'?}{Y:[a-z]'?}_{0}",
+      "goal": "nullity(X, Y)",
+      "unordered": true
+    }
+  ]
+}

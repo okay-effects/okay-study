@@ -85,8 +85,9 @@ object Model:
   /** `rules` as one text or a list of lines */
   private def text(j: Json): Either[String, String] = j match
     case Json.Str(s) => Right(s)
-    case Json.Arr(lines) => all(lines.map { case Json.Str(s) => Right(s); case o => Left(s"a rule is text: ${o.render}") })
-      .map(_.mkString("\n"))
+    case Json.Arr(lines) =>
+      all(lines.map { case Json.Str(s) => Right(s); case o => Left(s"a rule is text: ${o.render}") })
+        .map(_.mkString("\n"))
     case other => Left(s"rules are text: ${other.render}")
 
   def parse(source: String): Either[String, Model] =

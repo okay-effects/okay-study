@@ -57,7 +57,8 @@ object Solve:
         g <- goal(read._1)
         args <- g.args.foldLeft[Either[String, Vector[String]]](Right(Vector.empty))((as, t) => as.flatMap(v =>
           t match
-            case Term.Var(n) => read._2.get(n).map(v :+ _).toRight(s"the goal's $n is no slot of ${read._1.pattern.text}")
+            case Term.Var(n) =>
+              read._2.get(n).map(v :+ _).toRight(s"the goal's $n is no slot of ${read._1.pattern.text}")
             case Term.Const(c) => Right(v :+ c)))
       yield sofar + claim(read._1, g.pred, args))
 
