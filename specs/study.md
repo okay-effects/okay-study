@@ -76,3 +76,12 @@ answers and, apart, solutions. It separates the two halves by itself:
   could find it, checked by the count and the pairing of numbers.
 - A model's notation of answers must be the book's; where a book prints one answer in several ways the measure
   is a lower bound.
+
+## 7. Knowledge looked up (planned, SPRINT 5)
+
+The symbolic side knows what it lacks: a goal not reached names the missing fact, and that hole — said in words —
+is the query. The reader's part is the one it already has: among a page's sentences, choose the one that states
+the fact, and its canonical form. The guarantee changes and must be said to the person: an answer from the book
+alone is right because the theory passed the book's exercises; an answer with a looked-up fact FOLLOWS from its
+sources, quoted and addressed, and is right if they are. Rules are never looked up. A page cannot instruct a
+reader that only chooses among forms the engine offered.
