@@ -17,10 +17,10 @@ object Study:
 
   private val patterns: String =
     """PATTERNS. A pattern is literal text with slots. `{X}` is a slot (a name beginning with a capital letter)
-      |matching any text; `{X:regex}` gives the slot its own regular expression (no `}` inside). The regex
-      |`[a-z]'?` matches one letter with an OPTIONAL prime: `a`, `c'`. (Without the `?` the prime is required
-      |and `a` is not matched.) A pattern must match the WHOLE text; of several forms the first that matches is
-      |used. Text like `_{1}` in a pattern is literal: only `{Capital...}` is a slot.""".stripMargin
+      |matching any text; `{X:regex}` gives the slot its own regular expression (no `}` inside), e.g.
+      |`{N:[0-9]+}` for a number; in a regex `?` makes the character before it optional. A pattern must match
+      |the WHOLE text; of several forms the first that matches is used. Braces around anything but a name
+      |beginning with a capital letter are literal text.""".stripMargin
 
   private val wordsFormat: String =
     s"""You write the WORDS of a model: how the problems of a book and their answers are written. The rules that
@@ -36,16 +36,18 @@ object Study:
        |SENTENCES. Each form reads one kind of sentence of a problem into facts for a Datalog engine. A fact
        |template is `pred(arg, ...)` with a lowercase predicate name; an argument is text where `{X}` is replaced
        |by the slot's value. `{#}` is the number of the sentence in its problem (1, 2, ...): put it as the first
-       |argument, so that the rules can tell the sentences apart. Example:
-       |  {"pattern": "No {X:[a-z]'?} are {Y:[a-z]'?}", "facts": ["no({#}, {X}, {Y})"]}
+       |argument, so that the rules can tell the sentences apart. Example, of another kind of problem:
+       |  {"pattern": "{X:[A-Z][a-z]+} is taller than {Y:[A-Z][a-z]+}", "facts": ["taller({#}, {X}, {Y})"]}
        |TERMS. Every slot value of a matched sentence is also read by the first "terms" form that matches it,
        |and that form's facts are added. The engine cannot build new constants, so this is the only way to relate
-       |a term to another the sentence does not contain — e.g. a letter to its primed form and back:
-       |  {"pattern": "{T:[a-z]}'", "facts": ["neg({T}', {T})", "neg({T}, {T}')", "letter({T}', {T})", "letter({T}, {T})"]},
-       |  {"pattern": "{T:[a-z]}",  "facts": ["neg({T}', {T})", "neg({T}, {T}')", "letter({T}', {T})", "letter({T}, {T})"]}
+       |a term to another the sentence does not contain. Example, of another kind of problem — a plural and
+       |its singular, both ways, whichever of the two the sentence has:
+       |  {"pattern": "{T:[a-z]+}s", "facts": ["plural({T}, {T}s)", "name({T})", "name({T}s)"]},
+       |  {"pattern": "{T:[a-z]+}",  "facts": ["plural({T}, {T}s)", "name({T})", "name({T}s)"]}
        |ANSWERS. One form per KIND of answer the book prints (not per problem). Its pattern is the book's own
        |notation with slots; its goal is `pred(X, Y)` — a predicate name you choose for that kind of answer, with
-       |exactly the pattern's slots as its arguments. The rules written later will derive this predicate. An
+       |exactly the pattern's slots as its arguments. The rules written later will derive this predicate; two
+       |answer forms never share a goal's predicate (two kinds of answer are two different claims). An
        |answer the book prints as `p + q` is two answers, each read by a form alone: never put ` + ` in a pattern.
        |`"unordered": true` when the order of the two arguments says nothing.""".stripMargin
 
@@ -63,9 +65,6 @@ object Study:
       |- Recursion is allowed and is how a chain of any length is followed:
       |    reach(X, Y) :- step(X, Y).
       |    reach(X, Z) :- step(X, Y), reach(Y, Z).
-      |- "Exactly once" is said with a negation of "twice":
-      |    twice(B) :- occurs(P, B), occurs(Q, B), P != Q.
-      |    once(B) :- occurs(P, B), not twice(B).
       |- Comment lines begin with `%`.
       |The rules must be GENERAL: they see only the facts of one problem, of any number of sentences. Never write
       |a problem's letters or its answer into a rule. The answers of a problem are ALL solutions of the answer
@@ -99,7 +98,10 @@ object Study:
     val preds = m.sentences.flatMap(_.facts.map(_.pred)).toSet
     val clash = m.answers.flatMap(s => Parse.atom(s.goal).toOption.map(_.pred)).filter(preds)
       .map(p => s"the answer predicate `$p` is also a sentence's fact: an answer must be derived, choose another name")
-    (sentences ++ answers ++ goals ++ clash).distinct
+    val shared = m.answers.flatMap(s => Parse.atom(s.goal).toOption.map(_.pred)).groupBy(identity)
+      .collect { case (p, uses) if uses.size > 1 => s"two answer forms share the goal predicate `$p`: each kind of " +
+        "answer is its own claim, give each its own predicate" }
+    (sentences ++ answers ++ goals ++ clash ++ shared).distinct
 
   def wordsTask(lesson: String, examples: Vector[Exercise]): String =
     s"""$wordsFormat
