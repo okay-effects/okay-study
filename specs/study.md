@@ -85,3 +85,18 @@ the fact, and its canonical form. The guarantee changes and must be said to the 
 alone is right because the theory passed the book's exercises; an answer with a looked-up fact FOLLOWS from its
 sources, quoted and addressed, and is right if they are. Rules are never looked up. A page cannot instruct a
 reader that only chooses among forms the engine offered.
+
+### 4.2 The teacher writes the whole model at once — NEGATIVE (2026-11-18)
+
+Qwen3.6-35B-A3B (4-bit) through the gateway, Books VI–VII as printed (44 KB), 10 exercises of § 8 shown, 16 held
+out, 6 rounds, thinking on, 12,000 tokens a round, 10 minutes: **shown 0 of 10, held out 0 of 16**. What it wrote:
+- the slot class `[a-z]'` where the format's own example says `[a-z]'?` — no sentence without a prime is read;
+- rules that are not Datalog: terms inside terms (`combine(sub(X, 0, M, 0), …)`), a `+` in a head, the book's
+  three Figures copied as shapes with no way from a problem's facts to them;
+- the answers of the shown problems written as "goals" (`"goal": "a_1 b_0 + b_1 a_0"`) — a table, not a theory.
+And the harness's own faults: three rounds of six came back empty (the thinking took the whole budget), an empty
+reply was put into the conversation, and the round after it repeated an earlier writing word for word.
+The reason, as far as one run tells: three different things are asked in one answer — a notation (patterns), a
+theory (rules) and a dialect (this Datalog) — and the only signal back is the last one's failure. Next (§5.1):
+the stages apart, each with its own check — the words first (every sentence read, every printed answer read and
+said back the same), then the rules over fixed words with the facts of a problem shown.
