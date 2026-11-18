@@ -53,3 +53,10 @@ object Carroll:
     14 -> "the answer names e, an attribute two premisses hold: a conclusion has retinends only (d and c here)",
     26 -> "every attribute is in two premisses and the answer names c, which is in none",
     27 -> "c is in three premisses: an attribute is in two (an eliminand) or one (a retinend)")
+
+  /** the lesson for soriteses: Book VI (the method of subscripts) and Book VII (soriteses), as printed */
+  def soritesLesson(book: Book): String =
+    val from = book.lines.indexWhere(_.trim == "BOOK VI.")
+    val to = book.lines.indexWhere(_.trim == "BOOK VIII.", from)
+    require(from >= 0 && to > from, "Book VI to Book VIII not found")
+    book.lines.slice(from, to).filterNot(_.trim.matches("pg[-0-9a-z]+")).mkString("\n")
