@@ -60,3 +60,44 @@ object Carroll:
     val to = book.lines.indexWhere(_.trim == "BOOK VIII.", from)
     require(from >= 0 && to > from, "Book VI to Book VIII not found")
     book.lines.slice(from, to).filterNot(_.trim.matches("pg[-0-9a-z]+")).mkString("\n")
+
+  private val Formula = """[a-z]'?(?:_\{1\})?[a-z]'?_\{0\}""".r
+
+  /** italics' marks and the text's no-break spaces away, spaces single */
+  private def plain(s: String): String = s.replace("_", "").replace(' ', ' ').replaceAll("\\s+", " ").trim
+
+  /** blocks under headings that are a number alone, as `=12.=` or ` 12.` */
+  private def blocks(lines: Vector[String], head: scala.util.matching.Regex): Vector[(Int, Vector[String])] =
+    val at = lines.indices.filter(i => head.matches(lines(i)))
+    at.zip(at.drop(1) :+ lines.size).map((from, to) =>
+      head.findFirstMatchIn(lines(from)).get.group(1).toInt -> lines.slice(from + 1, to)).toVector
+
+  /** Book VIII, § 9: sixty concrete soriteses — the premisses and the dictionary (EX9), the English answer (AN9),
+   * and from the solutions (SL9) each premiss in subscript form and the conclusion */
+  def concreteSoriteses(book: Book): Vector[Concrete] =
+    val page = (l: String) => l.trim.matches("pg[-0-9a-z]+")
+    val answers = Book.items(book.between("AN9", "CHAPTER III.").filterNot(page)).toMap
+    val solutions = blocks(book.between("SL9", "pg164").filterNot(page), """^\s*(\d+)\.\s*$""".r).toMap
+    blocks(book.between("EX9", "CHAPTER II.").filterNot(page), """^\s*=(\d+)\.=\s*$""".r).map { (n, lines) =>
+      val text = lines.mkString("\n")
+      val (stated, glossary) = text.splitAt(text.indexOf("Univ."))
+      val premisses = """(?s)\(\d+\)\s+(.*?)(?=\n\s*\(\d+\)|\z)""".r.findAllMatchIn(stated)
+        .map(m => plain(m.group(1)).stripSuffix(";").stripSuffix(".").trim).toVector
+      val universe = "\"([^\"]*)\"".r.findFirstMatchIn(glossary).map(_.group(1)).getOrElse("things")
+      val dictionary = """(?s)\b([a-z]) = (.*?)(?=;\s*[a-z] = |\z)""".r.findAllMatchIn(plain(glossary))
+        .map(m => m.group(1) -> m.group(2).trim.stripSuffix(".").trim).toVector
+      val solved = solutions.getOrElse(n, Vector.empty).mkString("\n")
+      val gold = Formula.findAllIn(solved).take(premisses.size).toVector
+      val conclusion = Formula.findAllIn(solved.drop(solved.lastIndexOf('¶') + 1).takeWhile(_ != '\n')).mkString(" + ")
+      Concrete(n, premisses, universe.stripSuffix("."), dictionary, gold, conclusion, clean(answers.getOrElse(n, "")))
+    }
+
+  /** § 9's exercises whose printed solution the symbolic model does not confirm; kept out of every measure */
+  val concreteMisprinted: Map[Int, String] = Map.empty
+
+  /** whether these readings of an exercise's premisses give the book's conclusion — as a nullity: the book prints
+   * the existence of one retinend where its own rule (§ 8) gives both, so existence is not compared here */
+  def concluded(model: Model, c: Concrete, read: Vector[Premiss]): Either[String, Boolean] =
+    val nullities = (said: Vector[String]) => said.flatMap(Premiss.ofSubscript).map(_.nullity).toSet
+    Solve.run(model, read.map(_.sentence)).map(found =>
+      found.nonEmpty && nullities(found.map(_._2)) == nullities(c.conclusion.split("\\s+\\+\\s+").toVector))
