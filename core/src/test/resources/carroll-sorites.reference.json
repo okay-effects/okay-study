@@ -1,0 +1,36 @@
+{
+  "sentences": [
+    {"pattern": "No {X:[a-z]'?} are {Y:[a-z]'?}", "facts": ["nullity({#}, {X}, {Y})"]},
+    {"pattern": "All {X:[a-z]'?} are {Y:[a-z]'?}", "facts": ["every({#}, {X}, {Y})"]}
+  ],
+  "terms": [
+    {"pattern": "{T:[a-z]}'", "facts": ["neg({T}', {T})", "neg({T}, {T}')", "base({T}', {T})", "base({T}, {T})"]},
+    {"pattern": "{T:[a-z]}", "facts": ["neg({T}', {T})", "neg({T}, {T}')", "base({T}', {T})", "base({T}, {T})"]}
+  ],
+  "rules": [
+    "% a premiss as a nullity of two attributes: `All x are y` is `x exists, and no x are not-y`",
+    "null(P, X, Y) :- nullity(P, X, Y).",
+    "null(P, X, NY) :- every(P, X, Y), neg(Y, NY).",
+    "exists(X) :- every(P, X, Y).",
+    "% what is null gives an implication each way",
+    "imp(X, NY) :- null(P, X, Y), neg(Y, NY).",
+    "imp(Y, NX) :- null(P, X, Y), neg(X, NX).",
+    "imp(X, Z) :- imp(X, Y), imp(Y, Z).",
+    "% an attribute in two premisses is eliminated; one in a single premiss is retained",
+    "occurs(P, B) :- null(P, X, Y), base(X, B).",
+    "occurs(P, B) :- null(P, X, Y), base(Y, B).",
+    "twice(B) :- occurs(P, B), occurs(Q, B), P != Q.",
+    "kept(X) :- null(P, X, Y), base(X, B), not twice(B).",
+    "kept(Y) :- null(P, X, Y), base(Y, B), not twice(B).",
+    "% the conclusion: the two retained attributes are null together",
+    "concl(X, Y) :- kept(X), kept(Y), base(X, BX), base(Y, BY), BX != BY, neg(Y, NY), imp(X, NY).",
+    "ans_all(X, Y) :- concl(X, Y), exists(X).",
+    "some_exists(X, Y) :- concl(X, Y), exists(X).",
+    "some_exists(X, Y) :- concl(X, Y), exists(Y).",
+    "ans_no(X, Y) :- concl(X, Y), not some_exists(X, Y)."
+  ],
+  "answers": [
+    {"pattern": "{X:[a-z]'?}_{1}{Y:[a-z]'?}_{0}", "goal": "ans_all(X, Y)", "unordered": false},
+    {"pattern": "{X:[a-z]'?}{Y:[a-z]'?}_{0}", "goal": "ans_no(X, Y)", "unordered": true}
+  ]
+}
