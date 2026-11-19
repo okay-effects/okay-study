@@ -28,7 +28,7 @@ lazy val root = (project in file(".")).aggregate(core, study).settings(publish /
 /** the small reader: a language model on Apple's GPU (mlx-scala) weighs a premiss's readings said in words */
 val mlxNativeLib =
   sys.env.get("MLX_SCALA_LIB").map(file).getOrElse(file("../mlx-scala/native-lib/out/lib")).getCanonicalFile
-lazy val reader = (project in file("reader")).dependsOn(core).settings(name := "okay-study-reader",
+lazy val reader = (project in file("reader")).dependsOn(core, study).settings(name := "okay-study-reader",
   publish / skip := true, resolvers += "mlx-scala" at "https://sergey-scherbina.github.io/mlx-scala/maven",
   libraryDependencies ++= Seq("io.github.sergey-scherbina" %% "mlx-scala" % "0.1.0",
     "io.github.sergey-scherbina" %% "mlx-scala-llm" % "0.1.0", munit),

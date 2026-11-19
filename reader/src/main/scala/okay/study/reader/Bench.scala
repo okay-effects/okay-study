@@ -7,7 +7,8 @@ import java.nio.file.{Files, Path}
 /** THE SMALL NEUROSYMBOLIC MODEL MEASURED on Carroll's concrete soriteses (§ 9): a small language model reads
  * each premiss by choosing among its readings said in words, the symbolic model (models/carroll-sorites.json)
  * concludes. The first DEMOS exercises are shown to the reader in its prompt; the rest are measured.
- *   READER (mlx-community/Qwen3-0.6B-4bit), DEMOS (3), ONLY (all), SCORE (mean | sum), TOP (4) */
+ *   READER (mlx-community/Qwen3-0.6B-4bit), ADAPTER (a trained one's file), DEMOS (3), FROM, ONLY (all),
+ *   SCORE (mean | sum | pmi), TOP (4) */
 object Bench:
   private def env(name: String, default: String): String = sys.env.getOrElse(name, default)
 
@@ -19,9 +20,10 @@ object Bench:
     // FROM: the first exercise measured is FROM + 1 — one measured set for readers shown different numbers
     val asked = all.drop(env("FROM", demos.size.toString).toInt.max(demos.size)).take(env("ONLY", "1000").toInt)
     val repo = env("READER", "mlx-community/Qwen3-0.6B-4bit")
-    val scorer = Scorer(repo, demos, env("SCORE", "mean"))
+    val scorer = Scorer(repo, demos, env("SCORE", "mean"), sys.env.get("ADAPTER"))
     val top = env("TOP", "4").toInt
-    println(s"$repo, ${demos.size} exercises shown, ${asked.size} measured, score ${env("SCORE", "mean")}, top $top")
+    println(s"$repo${sys.env.get("ADAPTER").fold("")(" with " + _)}, ${demos.size} exercises shown, " +
+      s"${asked.size} measured, score ${env("SCORE", "mean")}, top $top")
     var premisses, premissesRight, nullitiesRight, aloneRight, togetherRight, togetherWrong, unread, inTop = 0
     val t0 = System.nanoTime()
     for c <- asked do

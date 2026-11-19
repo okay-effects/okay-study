@@ -2,7 +2,7 @@ package okay.study.reader
 
 import mlx.{Dtype, Scope}
 import mlx.Mlx.*
-import mlx.llm.{Chat, Model, Models}
+import mlx.llm.{Adaptable, Chat, Lora, Model, Models}
 import okay.effects.json.Json
 import okay.study.{Concrete, InWords, Premiss, Reading}
 
@@ -13,24 +13,13 @@ import java.nio.file.{Files, Path}
  * model only chooses. `demos`: exercises shown before, each premiss with the book's reading (no training) */
 /** `mode`: "mean" or "sum" of the option's token log-probabilities; "pmi" — what the TEXT adds: the mean
  * after the premiss minus the mean after the same terms with no sentence (okay-desk theory §11.1) */
-final class Scorer(repo: String, demos: Vector[Concrete], mode: String):
+final class Scorer(repo: String, demos: Vector[Concrete], mode: String, adapter: Option[String] = None):
   private val dir = Models.snapshot(repo).orElse(Some(Path.of(repo)).filter(Files.isDirectory(_)))
     .getOrElse(sys.error(s"$repo not in the cache"))
   private val chat = Chat.load(dir)
   private val model = Model.load(dir, mapped = true)
-
-  private val system =
-    "You rewrite a sentence in standard form, using only the given terms. A standard form is either " +
-      "\"All U that are X are Y.\" or \"No U are both X and Y.\", where U is the universe and X and Y are " +
-      "terms, or terms with \"not\" before them."
-
-  private def message(role: String, content: String): Json =
-    Json.obj("role" -> Json.Str(role), "content" -> Json.Str(content))
-
-  private def about(c: Concrete, sentence: String): String =
-    s"Universe: ${c.universe}.\nTerms: ${c.dictionary.map(_._2).mkString("; ")}.\nSentence: $sentence"
-
-  private def asked(c: Concrete, i: Int): String = about(c, c.premisses(i) + ".")
+  adapter.foreach(f => Lora.attach(model.asInstanceOf[Adaptable], f))
+  import Scorer.{about, asked, message, system}
 
   private val shown: Vector[Json] = Vector(message("system", system)) ++ demos.flatMap(d =>
     d.goldPremisses.toVector.flatMap(_.zipWithIndex.flatMap((p, i) =>
@@ -80,3 +69,18 @@ final class Scorer(repo: String, demos: Vector[Concrete], mode: String):
     val after = score(prompt(asked(c, i)), said)
     if mode != "pmi" then after
     else after.zip(score(prompt(about(c, "(not given)")), said)).map(_ - _)
+
+/** the words every reader is asked by — the trained one in its training too */
+object Scorer:
+  val system: String =
+    "You rewrite a sentence in standard form, using only the given terms. A standard form is either " +
+      "\"All U that are X are Y.\" or \"No U are both X and Y.\", where U is the universe and X and Y are " +
+      "terms, or terms with \"not\" before them."
+
+  def message(role: String, content: String): Json =
+    Json.obj("role" -> Json.Str(role), "content" -> Json.Str(content))
+
+  def about(c: Concrete, sentence: String): String =
+    s"Universe: ${c.universe}.\nTerms: ${c.dictionary.map(_._2).mkString("; ")}.\nSentence: $sentence"
+
+  def asked(c: Concrete, i: Int): String = about(c, c.premisses(i) + ".")
