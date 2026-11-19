@@ -321,3 +321,32 @@ run; a small calculus (six rules) made by the same hand that made the format, in
 teacher is not local; the agent had tools and was told to read one file — its last stage counts three tool calls,
 which I did not inspect (the reference is in this repository; that its rules differ in structure is the evidence
 it was not copied).
+
+### 8.6 The sorites' shape, and the terms' words extracted from a model (2026-11-19)
+
+**The shape asked too** (`Reading.strict`: every term in two premisses, two terms in one; all sixty of the book's
+readings have it): with the trained reader, 21 right / 25 wrong / 4 not read of 50 at four readings a premiss,
+21 / 26 / 3 at eight — the reader alone gives 21. Nothing: a misreading that swaps a term still makes a sorites.
+
+**The words** (`MakeLexicon`, the 35B, shown each exercise's universe and terms and never its sentences: for each
+term, words for what has the attribute and for what has not; `Lexicon.evidence`: an option gains LAMBDA for each
+of its two terms the sentence has a word for, with the sign — matched exactly, by the words' first five letters).
+With the trained reader's weights dumped (`LexiconBench`, no model running):
+
+| | lambda 0 | 2 | 5 | 10 | 20 |
+|---|---|---|---|---|---|
+| exercises 11–60: premisses as nullities of 233 | 181 | 190 | **192** | 185 | 173 |
+| conclusions alone, of 50 | 21 | 21 | **23** | 22 | 16 |
+| conclusions with the shape | 21 | 24 | **27** | 25 | 18 |
+| exercises 1–10: premisses of 30 / conclusions alone / with the shape | 28 / 8 / 10 | 27 / 7 / 9 | 27 / 7 / 8 | 24 / 5 / 7 | 24 / 5 / 7 |
+
+- **The lexicon has the meant words for 20 of the 52 misread premisses** (38%) — the links ARE extracted by asking
+  about the terms alone, for a part; the match is crude (no morphology, no phrases of the sentence's own).
+- **A modest gain where the reader errs** (11–60: 21 → 23 conclusions alone, → 27 with the shape at lambda 5) and a
+  LOSS where it already reads well (1–10: 8 → 7). Chosen on 1–10, as the protocol said, lambda would be 0: so this
+  is not a result to claim — the evidence must be used only where the reader doubts (a small margin), not added
+  to every premiss; and a large lambda overrides the reader and hurts everywhere.
+- With the words in, **the shape helps for the first time** (23 → 27): the exact side needs a reader that is
+  nearly right to have something to say.
+All sixty with the trained reader, no lexicon: 209 of 263 premisses as nullities, 29 conclusions alone, 31 with
+the shape.
