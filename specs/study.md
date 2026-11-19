@@ -144,3 +144,35 @@ the method's. To hold against it:
 2. **An unseen book**: a small invented calculus, its lesson and exercises written by us, to take the training's
    memory out of the measure.
 3. Then SPRINT 2 (the reader's ceiling on § 9).
+
+## 8. The small neurosymbolic model: a reader that chooses, the symbolic model concludes (2026-11-19)
+
+The whole thing for Carroll's concrete soriteses (§ 9, sixty): `Reading` (core) — each premiss's options
+(`Premiss.options`: two different terms, plain or negated, as `All` or `No`; 72 over four terms) said in the
+exercise's own words (`InWords`: "All persons that are babies are not logical."), weighed by a small language model
+(`reader/Scorer`: the mean log-probability of the option's tokens after the premiss; nothing is generated), decided
+alone (the best option of each premiss) or TOGETHER with the symbolic model (combinations of each premiss's four
+best, by summed weight, the first one the exact side accepts: every term of the dictionary used, a conclusion
+drawn). The data is the book's own: its solutions print every premiss in subscript form and the conclusion; the
+symbolic model the teacher wrote (§4.4) confirms all sixty. A conclusion is compared as a nullity (the book prints
+one retinend's existence where its rule of § 8 gives both).
+
+### 8.1 Untrained readers, three sizes — the reader is the limit, and the exact side does not help it
+
+Qwen3, 4-bit, no training; three exercises shown in the prompt (their premisses with the book's readings), 57
+measured, 254 premisses:
+
+| reader | premisses right alone | the book's reading in the top 4 | conclusions alone | together: right / wrong / not read | s an exercise |
+|---|---|---|---|---|---|
+| 0.6B | 53 (21%) | 100 (39%) | 1 of 57 | 1 / 37 / 19 | 9.6 |
+| 1.7B | 115 (45%) | 164 (65%) | 18 | 18 / 39 / 0 | 19.2 |
+| 4B | 174 (69%) | 225 (89%) | 28 | 28 / 29 / 0 | 40.1 |
+
+- **Size matters steeply**: 21% → 45% → 69% of premisses. An untrained 0.6B does not read these sentences.
+- **The exact side added NOTHING**: together = alone in every row, and what alone left unread or wrong became
+  wrong. The acceptance (every term used, a conclusion drawn) is passed by many wrong readings — which of two
+  well-formed soriteses a text means is a question of language only. The check is sound and nearly empty here.
+- "Premisses right" is strict (an `All` read as its `No` counts wrong though the conclusion's nullity is the
+  same): the conclusions are better than the premisses' share would give. A measure by nullity is to add.
+Next: what costs no training (the weight as what the TEXT adds — PMI, theory §11.1; more exercises shown), then
+the reader trained on pairs made from the formal side.
