@@ -237,3 +237,20 @@ and under the untrained 4B (161 / 210 / 32). So the reader's gap IS closed by tr
 cost no person's work — and 187 lessons are few. What decides now is the lessons: their number, and their kind
 (the read-back keeps under half; the themes drift). Still true: the exact side's acceptance adds nothing.
 One seed; the 50 exercises are one book's.
+
+### 8.4 All the lessons — the second point: 21 conclusions of 50
+
+The other 85 themes made (alone on the GPU: 594 premisses said in all, **301 + 206 = 507 read back**, 294
+soriteses); the same training on 461 premisses, 46 apart (the loss apart 5.87 → 0.52 → 0.61: the second epoch
+already fits the lessons more than it reads — one epoch, or more lessons).
+
+| reader (Qwen3 0.6B, 4-bit) | premisses right of 233 | as nullities | in the top 4 | conclusions alone |
+|---|---|---|---|---|
+| untrained | 29 | 43 | 43 | 0 of 50 |
+| trained on 187 premisses | 122 | 177 | 195 | 15 |
+| **trained on 461 premisses** | **142** | **181** | **200** | **21** |
+
+More lessons still help the strict reading (122 → 142: `All` against `No`, the direction) and the conclusions
+(15 → 21); the reading as nullities barely moved (177 → 181), so what is left there is not a matter of more of
+the same lessons. Next: the anatomy of the wrong premisses (the right two terms with a wrong sign, or a wrong
+term), which says what kind of lesson is missing.
