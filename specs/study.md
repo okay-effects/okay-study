@@ -176,3 +176,34 @@ measured, 254 premisses:
   same): the conclusions are better than the premisses' share would give. A measure by nullity is to add.
 Next: what costs no training (the weight as what the TEXT adds — PMI, theory §11.1; more exercises shown), then
 the reader trained on pairs made from the formal side.
+
+### 8.2 What costs no training — NEGATIVE: neither the weight as what the text adds, nor more exercises shown
+
+One measured set (exercises 11–60: 50 exercises, 233 premisses), Qwen3 4-bit, untrained. "pmi": the option's
+mean log-probability after the premiss minus the same with the sentence replaced by "(not given)".
+
+| reader | weight | shown | premisses right | as nullities | in the top 4 | conclusions alone | together r / w / unread | s |
+|---|---|---|---|---|---|---|---|---|
+| 0.6B | mean | 3 | 50 | 64 | 95 | 2 of 50 | 2 / 33 / 15 | 10.5 |
+| 0.6B | mean | 10 | 62 | 73 | 107 | 1 | 0 / 33 / 17 | 14.4 |
+| 0.6B | pmi | 3 | 61 | 86 | 117 | 1 | 1 / 47 / 2 | 20.7 |
+| 0.6B | pmi | 10 | 57 | 75 | 126 | 1 | 2 / 47 / 1 | 28.7 |
+| 1.7B | mean | 3 | 107 | 167 | 151 | 13 | 13 / 37 / 0 | 20.3 |
+| 1.7B | mean | 10 | 117 | 160 | 168 | 13 | 13 / 36 / 1 | 24.1 |
+| 1.7B | pmi | 10 | 81 | 118 | 137 | 3 | 5 / 42 / 3 | 48.1 |
+| 4B | mean | 10 | 161 | 210 | 211 | 32 | 32 / 18 / 0 | 47.1 |
+| 4B | pmi | 10 | 140 | 184 | 192 | 13 | 13 / 36 / 1 | 94.2 |
+
+- **More exercises shown: nothing** (0.6B 2 → 1, 1.7B 13 → 13 conclusions; a few premisses more).
+- **pmi HURTS** at 1.7B (13 → 3) and 4B (32 → 13), and does nothing at 0.6B. The reason is to be found before it is
+  used again: here every option is made of the SAME dictionary's words, so the prior it removes may be the very
+  signal (which terms a sentence is about is read from the words it shares with them); the "no sentence" context
+  was one arbitrary wording.
+- **The exact side still adds nothing** (together = alone, within one or two).
+- **The 4B untrained reads 90% of premisses as nullities (210 of 233) and 32 conclusions of 50**; the 0.6B, a
+  quarter of the premisses and one or two conclusions. The gap is the reader's and it is large.
+
+So a small reader has to be TRAINED for the book's sentences — which is the plan's item anyway (pairs made from
+the formal side: a sorites sampled, said by a teacher in ordinary sentences, kept only if read back). Open with
+it: what the exact side can give the reading beyond acceptance (it knows the conclusion's form, not which reading
+was meant).
