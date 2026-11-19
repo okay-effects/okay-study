@@ -9,6 +9,18 @@ Done 2026-11-19 (§8): the small neurosymbolic model for § 9 built (a reader th
 concludes) and measured untrained — 0.6B 1–2 conclusions of 50, 1.7B 13, 4B 32; more exercises shown and pmi do
 not help; the exact side's acceptance adds nothing.
 
+**The demonstration's domain (the operator, 2026-11-19): a legal assistant for an immigrant.** First slice: the
+CUKR residence card in Poland (`books/cukr/`: UDSC's information sheet and sixty official questions with answers,
+in Polish and Ukrainian). Not Carroll: useful and plain to people.
+- D1 the lesson (the information sheet) → the theory by the teacher: who may apply, the four conditions, the
+  dates (4 June 2025; from 4 May 2026; the 365 days; 60 days to collect; six months away), as rules over a case's
+  facts (dates as numbers: comparisons are enough). Check: the official CASES (questions 10–20, 29, 43, 49, 53…)
+  stated by hand as facts, answered as UDSC answers them; held out apart from those shown.
+- D2 the conversation: the reader asks for the facts a case lacks (a form filled by talking, in uk/ru/pl), each
+  answer one of a few options; the answer with the rule's source and date. Check: the same cases told in words.
+- D3 the page (okay-ui), the foot rule, "information, not legal advice", the sources and their date on every
+  answer.
+
 0. **The reader trained** (needs the operator's word: the GPU for hours) — pairs from the formal side: soriteses
    sampled over dictionaries, each premiss said by the teacher in an ordinary sentence, kept only if the 4B (or the
    teacher) reads it back to the same form; a LoRA on the 0.6B through the options' choice (mlx-scala `Lora`,
