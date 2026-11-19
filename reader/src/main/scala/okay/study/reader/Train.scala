@@ -12,7 +12,10 @@ import scala.util.Random
  * up to WIDE — and the loss the meant one's share among them. Lessons: `MakePairs`' file; one in ten exercises is
  * kept apart and only read (the share chosen right is printed).
  *   READER (mlx-community/Qwen3-0.6B-4bit), LESSONS (runs/pairs/lessons.jsonl), OUT (runs/adapters/reader.safetensors),
- *   EPOCHS (2), WIDE (24), BATCH (4), RANK (16), LR (2e-4), SEED (1) */
+ *   EPOCHS (2), WIDE (24), BATCH (4), RANK (16), LR (2e-4), SEED (1),
+ *   LOSS (both | listwise | generative): the listwise loss ALONE flattened a reader's scores in okay-desk
+ *   (specs/frames.md §5.12), so by default each batch also takes a step of the generative loss — the meant
+ *   option's own tokens after the premiss */
 object Train:
   private def env(name: String, default: String): String = sys.env.getOrElse(name, default)
 
@@ -41,10 +44,13 @@ object Train:
 
     val train = choices(taught)
     val held = choices(apart)
-    println(s"$repo: ${lessons.size} lessons, ${train.size} premisses to train on, ${held.size} kept apart")
+    println(s"$repo: ${lessons.size} lessons, ${train.size} premisses to train on, ${held.size} kept apart, " +
+      s"loss ${env("LOSS", "both")}")
     val lora = Lora(model.asInstanceOf[Adaptable], rank = env("RANK", "16").toInt,
       projs = Seq("q", "k", "v", "o", "gate", "up", "down"), lr = env("LR", "2e-4").toFloat, seed = seed)
     val batch = env("BATCH", "4").toInt
+    val loss = env("LOSS", "both")
+    def written(c: Lora.Choice): (Array[Int], Int) = (c.context ++ c.options(c.meant), c.context.length)
     def apartLoss(): Float =
       if held.isEmpty then 0f else held.grouped(batch).map(b => lora.evaluateChoices(b) * b.size).sum / held.size
     println(f"before: the loss apart ${apartLoss()}%.4f")
@@ -52,7 +58,11 @@ object Train:
     for e <- 1 to env("EPOCHS", "2").toInt do
       var sum = 0f; var k = 0; var shown = 0
       for b <- rnd.shuffle(train).grouped(batch) do
-        sum += lora.stepChoices(b) * b.size; k += b.size
+        if loss != "generative" then sum += lora.stepChoices(b) * b.size
+        if loss != "listwise" then
+          val g = lora.stepBatch(b.map(written))
+          if loss == "generative" then sum += g * b.size
+        k += b.size
         if k / 200 > shown then
           shown = k / 200
           println(f"epoch $e, $k/${train.size}: mean loss ${sum / k}%.4f (${(System.nanoTime() - t0) / 1e9}%.0f s)")
