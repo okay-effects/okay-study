@@ -5,17 +5,24 @@ import okay.effects.json.Json
 import java.nio.file.{Files, Path}
 
 /** THE STUDY BY FILES, for a teacher that is not behind the gateway: the same tasks and the same judges as
- * `Study.write`, one step a call. TRAIN (10) exercises of Carroll's § 8 are shown.
+ * `Study.write`, one step a call. TRAIN (10) exercises are shown: of Carroll's § 8, or of the book in the
+ * directory BOOK (`lesson.txt`, and `exercises.jsonl`: a number, its sentences, the answer).
  *   task-words <out>                  the words' task
  *   words <reply> <words.json>        the reply judged; passed: the words kept
  *   task-rules <words.json> <out>     the rules' task over those words
  *   rules <words.json> <reply> <model.json>   the reply judged on the shown; the held out measured apart */
 object Judge:
   def main(args: Array[String]): Unit =
-    val book = Book(Files.readString(Path.of("books/carroll-symbolic-logic.txt")))
-    val exercises = Carroll.abstractSoriteses(book).filterNot(e => Carroll.misprinted.contains(e.number))
+    val (lesson, exercises) = sys.env.get("BOOK") match
+      case Some(dir) =>
+        Files.readString(Path.of(dir, "lesson.txt")) -> Files.readString(Path.of(dir, "exercises.jsonl"))
+          .linesIterator.filter(_.trim.nonEmpty).map(Json.fromText).map(j =>
+            Exercise(j("number").int, j("sentences").list.map(_.string), j("answer").string)).toVector
+      case None =>
+        val book = Book(Files.readString(Path.of("books/carroll-symbolic-logic.txt")))
+        Carroll.soritesLesson(book) ->
+          Carroll.abstractSoriteses(book).filterNot(e => Carroll.misprinted.contains(e.number))
     val (train, held) = exercises.splitAt(sys.env.getOrElse("TRAIN", "10").toInt)
-    val lesson = Carroll.soritesLesson(book)
     def read(path: String) = Files.readString(Path.of(path))
     def write(path: String, text: String) = { Files.writeString(Path.of(path), text); () }
     def words(path: String) = Model.parse(read(path)).fold(e => sys.error(e), identity)
