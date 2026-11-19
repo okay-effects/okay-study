@@ -5,6 +5,15 @@ What is being done now, each item with its check; done items move to `specs/stud
 Done 2026-11-18 (§4.1–4.4): the format reaches the book (26 of 26); the local 35B does not write the rules (0 of
 16 held out, twice); a stronger teacher does, at the first writing (16 of 16 held out; `models/carroll-sorites.json`).
 
+Done 2026-11-19 (§8): the small neurosymbolic model for § 9 built (a reader that chooses, the symbolic model
+concludes) and measured untrained — 0.6B 1–2 conclusions of 50, 1.7B 13, 4B 32; more exercises shown and pmi do
+not help; the exact side's acceptance adds nothing.
+
+0. **The reader trained** (needs the operator's word: the GPU for hours) — pairs from the formal side: soriteses
+   sampled over dictionaries, each premiss said by the teacher in an ordinary sentence, kept only if the 4B (or the
+   teacher) reads it back to the same form; a LoRA on the 0.6B through the options' choice (mlx-scala `Lora`,
+   okay-desk's `FrameTrain` as the model). Check: § 9's 50 measured exercises (never trained on), premisses as
+   nullities and conclusions, against the untrained 0.6B (1–2 of 50) and the untrained 4B (32 of 50).
 1. **Which teacher is enough** — the two tasks (`Judge`) to models between the 35B-A3B and the strong one. Check:
    held out of 16 per model; the smallest that passes; whether it runs on the Mac.
 2. **An unseen book** — an invented calculus with its lesson and exercises. Check: held out, with the strong
