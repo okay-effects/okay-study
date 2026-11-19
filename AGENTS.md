@@ -1,6 +1,6 @@
 # AGENTS.md — okay-study
 
-A textbook read into a neurosymbolic model: a theory for an exact engine and a reader for its problems, each
+THE TOOL (a library): a textbook read into a neurosymbolic model — a theory for an exact engine and a reader for its problems, each
 judged by the book's own exercises and answers. Read `specs/study.md` first; the theory behind it is okay-desk's
 `specs/theory.md` and `specs/guarantees.md`. Scala 3, lines at most 120 characters, English.
 
