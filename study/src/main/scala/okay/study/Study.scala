@@ -20,7 +20,9 @@ object Study:
       |matching any text; `{X:regex}` gives the slot its own regular expression (no `}` inside), e.g.
       |`{N:[0-9]+}` for a number; in a regex `?` makes the character before it optional. A pattern must match
       |the WHOLE text; of several forms the first that matches is used. Braces around anything but a name
-      |beginning with a capital letter are literal text.""".stripMargin
+      |beginning with a capital letter are literal text. Outside a slot a pattern is NOT a regular expression:
+      |`?`, `*`, `;?` there are literal characters. A number or a date in a sentence is kept as it is — the rules
+      |written later can compare numbers (`N < 365`), so a threshold belongs to a rule, not to a pattern.""".stripMargin
 
   private val wordsFormat: String =
     s"""You write the WORDS of a model: how the problems of a book and their answers are written. The rules that

@@ -1,0 +1,193 @@
+{
+  "sentences": [
+    {
+      "pattern": "PESEL UKR is active on the day of the application",
+      "facts": [
+        "pesel_today_active({#})"
+      ]
+    },
+    {
+      "pattern": "PESEL UKR is not active on the day of the application",
+      "facts": [
+        "pesel_today_inactive({#})"
+      ]
+    },
+    {
+      "pattern": "PESEL UKR was active on 4 June 2025",
+      "facts": [
+        "pesel_june_2025_active({#})"
+      ]
+    },
+    {
+      "pattern": "PESEL UKR was not active on 4 June 2025",
+      "facts": [
+        "pesel_june_2025_inactive({#})"
+      ]
+    },
+    {
+      "pattern": "the UKR status has lasted {N:[0-9]+} days without a break",
+      "facts": [
+        "status_days({#}, {N})"
+      ]
+    },
+    {
+      "pattern": "the applicant came to Poland from Ukraine after 23 February 2022",
+      "facts": [
+        "came_after_war({#})"
+      ]
+    },
+    {
+      "pattern": "the applicant is a child born in Poland after 23 February 2022",
+      "facts": [
+        "child_born_in_poland({#})"
+      ]
+    },
+    {
+      "pattern": "the mother holds a CUKR card",
+      "facts": [
+        "mother_has_card({#})"
+      ]
+    },
+    {
+      "pattern": "the mother does not hold a CUKR card",
+      "facts": [
+        "mother_has_no_card({#})"
+      ]
+    },
+    {
+      "pattern": "the registers hold all the required data",
+      "facts": [
+        "registers_complete({#})"
+      ]
+    },
+    {
+      "pattern": "the registers lack some required data",
+      "facts": [
+        "registers_lacking({#})"
+      ]
+    },
+    {
+      "pattern": "the application is made on {D:[0-9]+}",
+      "facts": [
+        "applied_on({#}, {D})"
+      ]
+    }
+  ],
+  "terms": [
+    {
+      "pattern": "{D:2026050[1-3]}",
+      "facts": [
+        "date_early({D})"
+      ]
+    },
+    {
+      "pattern": "{D:202605[0-9][0-9]}",
+      "facts": [
+        "date_in_window({D})"
+      ]
+    },
+    {
+      "pattern": "{D:20260[6-9][0-9][0-9]}",
+      "facts": [
+        "date_in_window({D})"
+      ]
+    },
+    {
+      "pattern": "{D:20261[0-9][0-9][0-9]}",
+      "facts": [
+        "date_in_window({D})"
+      ]
+    },
+    {
+      "pattern": "{D:20270[1-2][0-9][0-9]}",
+      "facts": [
+        "date_in_window({D})"
+      ]
+    },
+    {
+      "pattern": "{D:2027030[0-4]}",
+      "facts": [
+        "date_in_window({D})"
+      ]
+    },
+    {
+      "pattern": "{D:202[0-6][0-9][0-9][0-9][0-9]}",
+      "facts": [
+        "date_early({D})"
+      ]
+    },
+    {
+      "pattern": "{D:20[0-1][0-9][0-9][0-9][0-9][0-9]}",
+      "facts": [
+        "date_early({D})"
+      ]
+    },
+    {
+      "pattern": "{D:[0-1][0-9][0-9][0-9][0-9][0-9][0-9][0-9]}",
+      "facts": [
+        "date_early({D})"
+      ]
+    },
+    {
+      "pattern": "{D:[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]}",
+      "facts": [
+        "date_late({D})"
+      ]
+    },
+    {
+      "pattern": "{N:[1-9][0-9][0-9][0-9]+}",
+      "facts": [
+        "days_enough({N})"
+      ]
+    },
+    {
+      "pattern": "{N:36[5-9]}",
+      "facts": [
+        "days_enough({N})"
+      ]
+    },
+    {
+      "pattern": "{N:3[7-9][0-9]}",
+      "facts": [
+        "days_enough({N})"
+      ]
+    },
+    {
+      "pattern": "{N:[4-9][0-9][0-9]}",
+      "facts": [
+        "days_enough({N})"
+      ]
+    },
+    {
+      "pattern": "{N:[0-9]+}",
+      "facts": [
+        "days_short({N})"
+      ]
+    }
+  ],
+  "rules": [
+    "% the application can be made only from 4 May 2026 to 4 March 2027",
+    "verdict(too_early) :- applied_on(S, D), date_early(D).",
+    "verdict(too_late) :- applied_on(S, D), date_late(D).",
+    "% PESEL UKR must be active on the day of the application (adult and child alike)",
+    "verdict(no_pesel_today) :- pesel_today_inactive(S).",
+    "% the MOS system blocks the application when the registers lack data",
+    "verdict(registers_incomplete) :- registers_lacking(S).",
+    "% conditions of the first group only: PESEL UKR on 4 June 2025 and at least 365 days of UKR status",
+    "verdict(no_pesel_june_2025) :- came_after_war(A), pesel_june_2025_inactive(S).",
+    "verdict(under_365_days) :- came_after_war(A), status_days(S, N), days_short(N).",
+    "% condition of a child born in Poland: the mother holds a CUKR card",
+    "verdict(mother_without_card) :- child_born_in_poland(C), mother_has_no_card(S).",
+    "% eligible: every condition of the applicant's group is met",
+    "can_apply(S) :- applied_on(S, D), date_in_window(D), registers_complete(R), pesel_today_active(P).",
+    "verdict(eligible) :- can_apply(S), came_after_war(A), pesel_june_2025_active(J), status_days(T, N), days_enough(N).",
+    "verdict(eligible) :- can_apply(S), child_born_in_poland(C), mother_has_card(M)."
+  ],
+  "answers": [
+    {
+      "pattern": "{V:[a-z][a-z_0-9]*}",
+      "goal": "verdict(V)",
+      "unordered": false
+    }
+  ]
+}
