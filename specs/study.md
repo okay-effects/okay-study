@@ -272,3 +272,31 @@ nullities). Three ways, none measured yet:
    leave short — the acceptance made STRICT (each term at most twice, exactly two terms once);
 2. **lessons of that kind**: the teacher told to say every negated term by an opposite or a complement's name;
 3. **the person**: "«Gentiles» — is it «not Jews»?", once, kept as a word of that dictionary (theory §12).
+
+## 9. Words' relations read from the weights alone (2026-11-19, the operator's question: "without asking questions?")
+
+`scripts/weights-lens.scala` (scala-cli, the CPU, no text run through the model): Qwen3 0.6B's unquantized weights
+(Qwen/Qwen3-0.6B, 1.5 GB, kept in `runs/weights/`); for a word that is one token, (a) the whole-word tokens nearest
+to it by the embedding's cosine, (b) the MLP neurons whose write vector points most at it through the output
+matrix, and for each the tokens it promotes and those it suppresses.
+
+What came out, for fat, Jews, rich, old, thin, tall, married:
+- **The embedding gives the word's FAMILY, opposites included, with no sign.** thin: thinner, thick, slender,
+  skinny, slim; married: marry, marriage, unmarried, divorced; rich: richer, wealthy, …, poor; Jews: Jewish,
+  Judaism, Israelis, Palestinians, Muslims, Hindus, Catholics. Not always (old has no "young", tall no "short", fat
+  no "thin" among the first fourteen).
+- **Neurons for a word's concept are there and readable** (layer 20 neuron 702: Jewish, Jews, synagogue, Rabbi,
+  Israel, Torah, Hebrew; layer 22 neuron 1429: old, older, age, aged, ancient, outdated; layer 26 neuron 2268: oil,
+  lipid, fats, fat, grease), and many late ones are spelling (words beginning with F, with J).
+- **The opposite is NOT on the neuron's suppressed side.** What these neurons suppress is unrelated tokens. Where
+  opposites meet, they are promoted TOGETHER by one neuron of the scale: layer 27 neuron 755 — deep, short, strong,
+  thick, big, fast, cold, small, slow, large, weak; layer 21 neuron 2146 — size, larger, smaller, taller, bigger,
+  shorter. Opposition on two poles did show for grammar and tone (layer 26 neuron 552: plurals promoted, singulars
+  suppressed; layer 27 neuron 416: denial, annoyance against inspiration, creativity).
+
+Read with "Already Clean" (okay-desk specs/reading-already-clean.md): the small model has ONE neuron for a scale
+where a larger one would have its two ends apart — which is the very error of §8.5 (a term taken for its opposite).
+So from the weights alone one gets, at no prompt, the CANDIDATES for a term's other words; the sign is not there
+to read this way, and has to come from the word's form (un-, non-, -less), one narrow question to a model, or the
+person. Limits of this look: single tokens only ("Gentiles", "boarders" are several), the direct path to the
+output only, one model, seven words, read by eye.
