@@ -207,3 +207,33 @@ So a small reader has to be TRAINED for the book's sentences — which is the pl
 the formal side: a sorites sampled, said by a teacher in ordinary sentences, kept only if read back). Open with
 it: what the exact side can give the reading beyond acceptance (it knows the conclusion's form, not which reading
 was meant).
+
+### 8.3 The reader TRAINED on lessons made from the formal side — the first point: 0 → 15 conclusions of 50
+
+**The lessons** (`Sample`, `Pairs`, `MakePairs`): a dictionary the teacher invents for a theme (a universe and terms,
+as the book's), a sorites sampled over part of it (a chain of implications, each premiss in one of its three forms;
+a thousand sampled ones all accepted by the symbolic model — `SampleSuite`), each premiss SAID by the teacher in an
+ordinary sentence (the book's exercises 1–10 shown as the style), then READ BACK by the teacher apart, from the
+sentence alone; a pair is kept when the reading has the sampled nullity, and its label is the read-back's own form
+(`All` or `No`, as the sentence says it). No sentence of the measured exercises may come back as a lesson.
+First 65 themes: 129 soriteses, 444 premisses said, **206 read back** (46%; 75% on the first three themes — the
+later themes are object names, their terms odd, and the teacher's sentences drift).
+
+**The training** (`reader/Train`, mlx-scala `Lora`, rank 16, all projections, lr 2e-4, 2 epochs, batch 4): for a
+premiss, 24 options said in words — the meant one, the eleven others over the same two terms, others at random —
+a step of the listwise loss (`stepChoices`) and a step of the generative loss on the meant option (`stepBatch`;
+the listwise loss alone flattened a reader in okay-desk, frames.md §5.12). 187 premisses trained on, 19 apart:
+the loss apart 6.85 → 0.70 → 0.44. **Two minutes.**
+
+**Measured** on § 9's exercises 11–60 (never trained on; no exercise shown in the prompt; the weight a sum):
+
+| reader (Qwen3 0.6B, 4-bit) | premisses right of 233 | as nullities | in the top 4 | conclusions alone | together r / w / unread |
+|---|---|---|---|---|---|
+| untrained | 29 | 43 | 43 | 0 of 50 | 2 / 24 / 24 |
+| **trained on 187 premisses** | **122** | **177** | **195** | **15** | 15 / 33 / 2 |
+
+Beside §8.2's untrained readers with ten exercises shown: the trained 0.6B is at the untrained 1.7B (117 / 160 / 13)
+and under the untrained 4B (161 / 210 / 32). So the reader's gap IS closed by training, fast, from lessons that
+cost no person's work — and 187 lessons are few. What decides now is the lessons: their number, and their kind
+(the read-back keeps under half; the themes drift). Still true: the exact side's acceptance adds nothing.
+One seed; the 50 exercises are one book's.
