@@ -2,7 +2,7 @@ package okay.study.reader
 
 import okay.study.{Book, Carroll, Model, Reading, Sample}
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{Files, Path, StandardOpenOption}
 
 /** THE SMALL NEUROSYMBOLIC MODEL MEASURED on Carroll's concrete soriteses (§ 9): a small language model reads
  * each premiss by choosing among its readings said in words, the symbolic model (models/carroll-sorites.json)
@@ -31,7 +31,14 @@ object Bench:
     val t0 = System.nanoTime()
     for c <- asked do
       val gold = c.goldPremisses.get
-      val ranked = Reading.ranked(c, scorer.weigher)
+      // DUMP: every option's weight, in `Premiss.options`' order — a reading tried again with no model
+      val weigher: Reading.Weigher = (c, i, options) =>
+        val w = scorer.weigher(c, i, options)
+        sys.env.get("DUMP").foreach(f => Files.writeString(Path.of(f),
+          "{\"number\":" + c.number + ",\"premiss\":" + i + ",\"weights\":[" + w.mkString(",") + "]}\n",
+          StandardOpenOption.CREATE, StandardOpenOption.APPEND))
+        w
+      val ranked = Reading.ranked(c, weigher)
       val alone = Reading.alone(ranked)
       val right = alone.zip(gold).count(_ == _)
       premisses += gold.size; premissesRight += right
