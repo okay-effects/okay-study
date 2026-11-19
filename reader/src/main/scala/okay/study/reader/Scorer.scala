@@ -11,7 +11,9 @@ import java.nio.file.{Files, Path}
 /** THE SMALL MODEL AS A WEIGHER (mlx-scala, Apple's GPU): a premiss's options, each said in the exercise's own
  * words, weighed by the model's own probability of writing them after the premiss — nothing is generated, the
  * model only chooses. `demos`: exercises shown before, each premiss with the book's reading (no training) */
-final class Scorer(repo: String, demos: Vector[Concrete], sum: Boolean):
+/** `mode`: "mean" or "sum" of the option's token log-probabilities; "pmi" — what the TEXT adds: the mean
+ * after the premiss minus the mean after the same terms with no sentence (okay-desk theory §11.1) */
+final class Scorer(repo: String, demos: Vector[Concrete], mode: String):
   private val dir = Models.snapshot(repo).orElse(Some(Path.of(repo)).filter(Files.isDirectory(_)))
     .getOrElse(sys.error(s"$repo not in the cache"))
   private val chat = Chat.load(dir)
@@ -25,15 +27,27 @@ final class Scorer(repo: String, demos: Vector[Concrete], sum: Boolean):
   private def message(role: String, content: String): Json =
     Json.obj("role" -> Json.Str(role), "content" -> Json.Str(content))
 
-  private def asked(c: Concrete, i: Int): String =
-    s"Universe: ${c.universe}.\nTerms: ${c.dictionary.map(_._2).mkString("; ")}.\nSentence: ${c.premisses(i)}."
+  private def about(c: Concrete, sentence: String): String =
+    s"Universe: ${c.universe}.\nTerms: ${c.dictionary.map(_._2).mkString("; ")}.\nSentence: $sentence"
+
+  private def asked(c: Concrete, i: Int): String = about(c, c.premisses(i) + ".")
 
   private val shown: Vector[Json] = Vector(message("system", system)) ++ demos.flatMap(d =>
     d.goldPremisses.toVector.flatMap(_.zipWithIndex.flatMap((p, i) =>
       Vector(message("user", asked(d, i)), message("assistant", InWords.of(d, p))))))
 
-  // the state fed with a context but its last token: a longer context feeds the rest only
-  private var kept: Option[(Array[Int], Model.State)] = None
+  private def prompt(last: String): Array[Int] =
+    chat.prompt(shown :+ message("user", last), Nil, Map("enable_thinking" -> false))
+
+  // what every context begins with (the system's words and the exercises shown): fed once, kept by a checkpoint
+  private val common: Array[Int] =
+    val (a, b) = (prompt("A"), prompt("B"))
+    a.take(a.indices.takeWhile(i => i < b.length && a(i) == b(i)).size)
+  private val state: Model.State = model.newState()
+  private val begun: Model.Checkpoint =
+    val s = new Scope
+    try { model.logits(ints(common, 1, common.length)(using s), state)(using s).eval(); state.checkpoint() }
+    finally s.close()
 
   /** the log-probability of each option's tokens after the context: their sum, or their mean */
   private def score(context: Array[Int], options: Vector[Array[Int]]): Vector[Double] =
@@ -42,12 +56,10 @@ final class Scorer(repo: String, demos: Vector[Concrete], sum: Boolean):
     try
       def feed(st: Model.State, ids: Array[Int]): Unit =
         if ids.nonEmpty then model.logits(ints(ids, 1, ids.length)(using s), st)(using s).eval()
-      val st = kept match
-        case Some((ids, st)) if head.startsWith(ids) => feed(st, head.drop(ids.length)); st
-        case other =>
-          other.foreach(_._2.close())
-          val st = model.newState(); feed(st, head); st
-      kept = Some(head -> st)
+      require(head.startsWith(common), "a context begins with the common words")
+      val st = state
+      st.rewind(begun, 0): Unit
+      feed(st, head.drop(common.length))
       options.map { o =>
         val at = st.checkpoint()
         val input = last +: o.init
@@ -59,10 +71,12 @@ final class Scorer(repo: String, demos: Vector[Concrete], sum: Boolean):
         st.rewind(at, 0): Unit
         at.close()
         val total = lp.map(p => math.log(math.max(p, 1e-30f).toDouble)).sum
-        if sum then total else total / o.length
+        if mode == "sum" then total else total / o.length
       }
     finally s.close()
 
   val weigher: Reading.Weigher = (c: Concrete, i: Int, options: Vector[Premiss]) =>
-    val context = chat.prompt(shown :+ message("user", asked(c, i)), Nil, Map("enable_thinking" -> false))
-    score(context, options.map(o => chat.tokenizer.encode(InWords.of(c, o))))
+    val said = options.map(o => chat.tokenizer.encode(InWords.of(c, o)))
+    val after = score(prompt(asked(c, i)), said)
+    if mode != "pmi" then after
+    else after.zip(score(prompt(about(c, "(not given)")), said)).map(_ - _)
