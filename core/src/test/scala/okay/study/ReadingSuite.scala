@@ -26,3 +26,7 @@ class ReadingSuite extends munit.FunSuite:
     assertNotEquals(Reading.alone(ranked), c.goldPremisses.get)
     assertEquals(Carroll.concluded(model, c, Reading.alone(ranked)), Right(false))
     assertEquals(Reading.together(model, c, ranked), c.goldPremisses)
+
+  test("the book's own readings have the sorites' shape, all sixty"):
+    val not = all.filterNot(c => Reading.strict(model, c, c.goldPremisses.get)).map(_.number)
+    assertEquals(not, Vector.empty[Int])

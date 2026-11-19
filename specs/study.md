@@ -254,3 +254,21 @@ More lessons still help the strict reading (122 → 142: `All` against `No`, the
 (15 → 21); the reading as nullities barely moved (177 → 181), so what is left there is not a matter of more of
 the same lessons. Next: the anatomy of the wrong premisses (the right two terms with a wrong sign, or a wrong
 term), which says what kind of lesson is missing.
+
+### 8.5 The anatomy of what the trained reader still misreads: a TERM, said by its opposite
+
+The trained reader's 52 premisses misread as nullities (of 233): **45 with one term wrong, 7 with the two terms
+right and a sign wrong, none with both terms wrong.** And the wrong term is of one kind — the dictionary has a
+term, the sentence names its contradictory by another word: "No Gentiles have hooked noses" (c = Jews; meant
+not-c), "All members of the House of Lords wear coronets" (a = belonging to the House of Commons), "All my sons
+are slim" (a = fat), "None of the day-boys learn Greek" (a = boarders), "No teetotalers are pawnbrokers". The
+reader finds the term it can see and puts a wrong one in the place of the one it cannot.
+
+So what is left is KNOWLEDGE of words (opposites, complements within a universe), not the form of a premiss —
+the lexical kind of okay-desk's SPRINT T8, and what a larger model has more of (the untrained 4B: 210 as
+nullities). Three ways, none measured yet:
+1. **the exact side at last has something to say**: in a sorites every term is in two premisses, or in one for the
+   two retinends. A premiss with one term found and one unknown word can only take a term the other premisses
+   leave short — the acceptance made STRICT (each term at most twice, exactly two terms once);
+2. **lessons of that kind**: the teacher told to say every negated term by an opposite or a complement's name;
+3. **the person**: "«Gentiles» — is it «not Jews»?", once, kept as a word of that dictionary (theory §12).

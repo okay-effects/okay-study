@@ -22,10 +22,16 @@ object Reading:
   def accepted(model: Model, c: Concrete, read: Vector[Premiss]): Boolean =
     read.flatMap(_.letters).toSet == c.letters.toSet && Solve.run(model, read.map(_.sentence)).exists(_.nonEmpty)
 
+  /** the lesson's own shape of a sorites, asked too: every term in two premisses, but two terms (the retinends) in
+   * one — a reading that uses a term three times, or leaves three terms single, is no sorites */
+  def strict(model: Model, c: Concrete, read: Vector[Premiss]): Boolean =
+    val uses = read.flatMap(_.letters.toVector).groupBy(identity).view.mapValues(_.size).toMap
+    uses.values.forall(_ <= 2) && uses.values.count(_ == 1) == 2 && accepted(model, c, read)
+
   /** the weigher and the symbolic model together: combinations of each premiss's `top` readings, by their summed
    * weight, the first one accepted; none within `budget` combinations: not read (to be asked) */
   def together(model: Model, c: Concrete, ranked: Vector[Vector[(Premiss, Double)]], top: Int = 4,
-      budget: Int = 2000): Option[Vector[Premiss]] =
+      budget: Int = 2000, accept: (Model, Concrete, Vector[Premiss]) => Boolean = accepted): Option[Vector[Premiss]] =
     val lists = ranked.map(_.take(top))
     def weight(at: Vector[Int]): Double = at.indices.map(i => lists(i)(at(i))._2).sum
     val queue = mutable.PriorityQueue.empty[(Double, Vector[Int])](Ordering.by(_._1))
@@ -38,7 +44,7 @@ object Reading:
       val (_, at) = queue.dequeue()
       tried += 1
       val read = at.indices.toVector.map(i => lists(i)(at(i))._1)
-      if accepted(model, c, read) then found = Some(read)
+      if accept(model, c, read) then found = Some(read)
       else
         for i <- at.indices if at(i) + 1 < lists(i).size do
           val next = at.updated(i, at(i) + 1)
