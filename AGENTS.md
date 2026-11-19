@@ -4,7 +4,7 @@ THE TOOL (a library): a textbook read into a neurosymbolic model — a theory fo
 judged by the book's own exercises and answers. Read `specs/study.md` first; the theory behind it is okay-desk's
 `specs/theory.md` and `specs/guarantees.md`. Scala 3, lines at most 120 characters, English.
 
-- `core/` (`okay.study`): `Model` (patterns → facts, Datalog rules, answer forms; JSON in and out), `Solve`
+- `core/` (`okay.study`; the JVM and Scala.js: `core/shared`, the tests in `core/jvm`): `Model` (patterns → facts, Datalog rules, answer forms; JSON in and out), `Solve`
   (a problem's sentences → facts → okay-datalog → answers; the book's answer read by the same forms), `Verdict`,
   `Score`, `Book` (cutting a text into numbered exercises and answers), `Carroll` (the first book's layout and
   its misprints). No language model here — this is what runs on a phone.

@@ -8,7 +8,7 @@ class CarrollSuite extends munit.FunSuite:
   private def text(path: String) = Files.readString(Path.of(path))
   private val book = Book(text("books/carroll-symbolic-logic.txt"))
   private val exercises = Carroll.abstractSoriteses(book)
-  private val reference = Model.parse(text("core/src/test/resources/carroll-sorites.reference.json"))
+  private val reference = Model.parse(text("core/jvm/src/test/resources/carroll-sorites.reference.json"))
 
   test("the book's thirty exercises are cut out, each with its answer"):
     assertEquals(exercises.map(_.number), (1 to 30).toVector)

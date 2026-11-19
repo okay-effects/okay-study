@@ -10,7 +10,7 @@ import java.nio.file.{Files, Path}
 class StudySuite extends munit.FunSuite:
   private def text(path: String) = Files.readString(Path.of(path))
   private val exercises = Carroll.abstractSoriteses(Book(text("books/carroll-symbolic-logic.txt"))).take(5)
-  private val reference = Model.parse(text("core/src/test/resources/carroll-sorites.reference.json")).toOption.get
+  private val reference = Model.parse(text("core/jvm/src/test/resources/carroll-sorites.reference.json")).toOption.get
   private val words = reference.copy(rules = "").json
   /** the words with the prime required: a sentence without one is not read */
   private val badWords = words.replace("[a-z]'?}", "[a-z]'}")
