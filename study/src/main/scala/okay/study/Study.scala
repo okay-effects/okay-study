@@ -48,7 +48,9 @@ object Study:
        |  {"pattern": "{T:[a-z]+}",  "facts": ["plural({T}, {T}s)", "name({T})", "name({T}s)"]}
        |ANSWERS. One form per KIND of answer the book prints (not per problem). Its pattern is the book's own
        |notation with slots; its goal is `pred(X, Y)` — a predicate name you choose for that kind of answer, with
-       |exactly the pattern's slots as its arguments. The rules written later will derive this predicate; two
+       |exactly the pattern's slots as its arguments — at least one: the engine has no atoms without arguments,
+       |so an answer that is a fixed word is read by a slot (`{V:[a-z_]+}` with the goal `verdict(V)`, the rules
+       |deriving `verdict(the_word)`). The rules written later will derive this predicate; two
        |answer forms never share a goal's predicate (two kinds of answer are two different claims). An
        |answer the book prints as `p + q` is two answers, each read by a form alone: never put ` + ` in a pattern.
        |`"unordered": true` when the order of the two arguments says nothing.""".stripMargin
@@ -92,7 +94,7 @@ object Study:
           else Some(s"the answer $a is said back as $back by the pattern ${s.pattern.text}")
     }
     val goals = m.answers.flatMap(s => Parse.atom(s.goal) match
-      case Left(e) => Some(s"the goal `${s.goal}` is not `pred(X, Y)`: $e")
+      case Left(e) => Some(s"the goal `${s.goal}` is not `pred(X, Y)` (at least one argument, a slot): $e")
       case Right(atom) =>
         val vars = atom.args.collect { case okay.datalog.Term.Var(n) => n }
         if vars.size == atom.args.size && vars.toSet == s.pattern.slots.toSet then None
