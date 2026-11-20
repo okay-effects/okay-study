@@ -133,7 +133,7 @@ book's other exercises, in two stages each with its judge — and §4.2–4.3 me
 the method's. To hold against it:
 - one run, one book, one kind of problem, and the smallest theory one could ask for;
 - Carroll's method is in any large model's training: this is not yet "a theory learned from an unseen book" —
-  that needs a text the teacher cannot have seen (a made-up calculus with its own exercises);
+  that needs a text the teacher cannot have learnt its answers from;
 - the agent had tools; it reported, and its usage shows, two calls — the two files it was given; this is not
   enforced by the protocol.
 
@@ -141,8 +141,8 @@ the method's. To hold against it:
 
 1. **Which teacher is enough**: the same two tasks to models between the 35B-A3B and this one — the smallest
    that writes the rules decides whether build time can stay on the Mac.
-2. **An unseen book**: a small invented calculus, its lesson and exercises written by us, to take the training's
-   memory out of the measure.
+2. **An unseen book**: a text the teacher cannot have learnt its answers from — taken by the first application's
+   official text of 2026 (§10), whose model agrees with a second reading made apart.
 3. Then SPRINT 2 (the reader's ceiling on § 9).
 
 ## 8. The small neurosymbolic model: a reader that chooses, the symbolic model concludes (2026-11-19)
@@ -300,27 +300,6 @@ So from the weights alone one gets, at no prompt, the CANDIDATES for a term's ot
 to read this way, and has to come from the word's form (un-, non-, -less), one narrow question to a model, or the
 person. Limits of this look: single tokens only ("Gentiles", "boarders" are several), the direct path to the
 output only, one model, seven words, read by eye.
-
-### 4.5 A book no model has read — POSITIVE: 30 of 30 held out (2026-11-19)
-
-To take the training's memory out of §4.4: **the calculus of lanterns**, made up here (`Lanterns`,
-`books/lanterns/`): things tend one another, some are kindled, some veiled; warmth passes along tending but not
-through a veiled thing unless it is kindled itself; a problem's answer lists its dark things (`p°`) and its rifts
-(a warm thing tending a dark one, `p|q`). A lesson of a page in the book's manner with two worked examples, forty
-exercises whose answers a reference model gives (recursion and stratified negation). The same protocol (`Judge`
-with `BOOK=books/lanterns`), a fresh agent of the strong teacher, the task's one file:
-- **Words: passed at the second writing.** The first put `;?` after each sentence's pattern as if a pattern were a
-  regular expression (its text is literal); told that no form reads any sentence, it took them off.
-- **Rules: first writing — shown 10 of 10, HELD OUT 30 of 30** (`models/lanterns.json`, under `LanternsSuite`).
-  Not the reference's rules: the reference follows what a kindled thing reaches through unveiled ones; the teacher
-  wrote "a thing passes warmth on if it is kindled, or warm and not veiled" — the lesson's own sentence — with
-  `warm` and `passes` defined through each other.
-
-So a theory IS written from a lesson's prose alone, for a calculus that exists nowhere else. Held against it: one
-run; a small calculus (six rules) made by the same hand that made the format, in sentences already canonical; the
-teacher is not local; the agent had tools and was told to read one file — its last stage counts three tool calls,
-which I did not inspect (the reference is in this repository; that its rules differ in structure is the evidence
-it was not copied).
 
 ### 8.6 The sorites' shape, and the terms' words extracted from a model (2026-11-19)
 

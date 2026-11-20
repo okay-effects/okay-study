@@ -19,8 +19,6 @@ SPRINT). Here stays the tool: what the application needs of it comes back as ite
    nullities and conclusions, against the untrained 0.6B (1–2 of 50) and the untrained 4B (32 of 50).
 1. **Which teacher is enough** — the two tasks (`Judge`) to models between the 35B-A3B and the strong one. Check:
    held out of 16 per model; the smallest that passes; whether it runs on the Mac.
-2. **An unseen book** — an invented calculus with its lesson and exercises. Check: held out, with the strong
-   teacher; nothing of it can be in a training set.
 3. **The reader's ceiling on § 9** — the teacher reads concrete premisses into canonical sentences by the
    exercise's dictionary. Check: of 60, answered as the book's English answer says.
 4. **The small reader by choices** (okay-frames `Space`) — check: § 9 against the ceiling; the phone's seconds.

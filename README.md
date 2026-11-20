@@ -41,7 +41,6 @@ Verdict.of(model, Exercise(1, sentences, "a_{1}b_{0} + b_{1}a_{0}"))   // Right_
 - Lewis Carroll's *Symbolic Logic* (1896): a teacher's 12 rules, written from Books VI–VII and ten answered
   exercises, answer the 16 held-out abstract soriteses as the book does; four of the book's thirty are misprints
   the model exposed. A local 35B model did not write rules that run; a stronger teacher did, at the first writing.
-- A calculus made up for the test, which no model can have read: 30 of 30 held out.
 - An official legal text (the first application, [okay-migrant](https://okay-effects.github.io/okay-migrant/)):
   the teacher's models agree with a second reading made apart on thousands of cases and answer the office's own
   questions.
