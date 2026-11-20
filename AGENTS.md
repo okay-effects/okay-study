@@ -16,5 +16,7 @@ judged by the book's own exercises and answers. Read `specs/study.md` first; the
 - The rule: nothing a model writes is trusted; it serves by the exercises it answers as the book does. A measure
   is taken on exercises never shown. A negative result is written down with its reason.
 - Tests: `sbt test` (no model needed). A run with the teacher shares the Mac's GPU: look at what else runs first.
+- Public: github.com/okay-effects/okay-study; released 0.1.0 on its GitHub Pages (`RELEASING.md`: while nobody
+  but us uses it, a change is republished under the same number and the tag moved). Its first user: okay-migrant.
 - Plans: `SPRINT.md` (what is being done, each with its check); results go to `specs/study.md` §4.
 - Commits: plain messages, no attribution trailers.
