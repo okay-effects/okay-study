@@ -3,9 +3,21 @@
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
 ThisBuild / organization := "io.github.okay-effects"
-ThisBuild / version := "0.1.0-SNAPSHOT"
+ThisBuild / homepage := Some(url("https://github.com/okay-effects/okay-study"))
+ThisBuild / version := "0.1.0"
 ThisBuild / scalaVersion := "3.3.8"
 ThisBuild / scalacOptions ++= Seq("-deprecation", "-feature", "-Wunused:all", "-Werror")
+ThisBuild / licenses := List("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.txt"))
+ThisBuild / developers := List(Developer("sergey-scherbina", "Sergiy Shcherbyna", "sergey.scherbina@gmail.com",
+  url("https://github.com/sergey-scherbina")))
+ThisBuild / scmInfo := Some(ScmInfo(url("https://github.com/okay-effects/okay-study"),
+  "scm:git@github.com:okay-effects/okay-study.git"))
+ThisBuild / versionScheme := Some("early-semver")
+/** RELEASES, ON GITHUB PAGES: `sbt publish` writes into `target/pages-maven/` (RELEASING.md) */
+val pagesRepository = settingKey[File]("the Maven repository a release is written to, for GitHub Pages")
+ThisBuild / pagesRepository := (ThisBuild / baseDirectory).value / "target" / "pages-maven"
+ThisBuild / publishTo := Some(MavenCache("pages", (ThisBuild / pagesRepository).value))
+ThisBuild / Compile / packageDoc / publishArtifact := false
 ThisBuild / resolvers ++= Seq("okay-datalog" at "https://okay-effects.github.io/okay-datalog/maven",
   "okay-llm" at "https://okay-effects.github.io/okay-llm/maven",
   "okay-scala" at "https://okay-effects.github.io/okay-scala/maven",
